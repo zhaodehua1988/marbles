@@ -95,20 +95,6 @@ func getMarblesById(stub shim.ChaincodeStubInterface,id string)( marble Marble){
 	json.Unmarshal(valAsbytes, &marble)
 	return marble
 }
-
-func getUserById(stub shim.ChaincodeStubInterface,id string)( user User){
-
-	var err error
-	fmt.Println("starting read")
-	valAsbytes, err := stub.GetState(id)           //get the var from ledger
-	if err != nil {
-		fmt.Sprintf("{\"Error\":\"Failed to get state for " + id + "\"}")
-	}
-
-	json.Unmarshal(valAsbytes, &user)
-	return user
-}
-
 func getAllMarbles(stub shim.ChaincodeStubInterface)(marbles []Marble,err error){
 
 	//var marble []Marble

@@ -27,6 +27,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"time"
 )
 
 // ============================================================================================================================
@@ -138,7 +139,7 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	var user User
-	user.ObjectType = "marble_owner"
+	user.ObjectType = "marble_user"
 	user.Id =  args[0]
 	user.Username = strings.ToLower(args[1])
 	user.Company = args[2]
@@ -155,7 +156,7 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	//store user
 	ownerAsBytes, _ := json.Marshal(user)      //convert to array of bytes
-	err = stub.PutState(user.Id, ownerAsBytes) //store user by its Id
+	err = stub.PutState(user.Id, ownerAsBytes) //store user by its UserID
 	if err != nil {
 		fmt.Println("Could not store user")
 		return shim.Error(err.Error())
@@ -216,18 +217,14 @@ func disable_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 }
 
 //新建一个申请()
-//       0     ,                       1       2
-//  marble id（此次申请的ID）  ,       color    Balance
-// "m999999999",                    "read",
-
-//      0      ,    1  ,  2  ,           3          ,      4     ,
-//     id      ,  contract, balance,     owner id    ,     authorizing_company,
-// "m999999999", "blue", "35", "o9999999999999",        "inter",
+//      0      ,      1  ,           2  ,     3                4        ,           5,
+//     id      ,    contact,      balance,   title           user id    ,     authorizing_company,
+// "m999999999", "13188888888",     "35",    "title"       "o9999999999999",        "inter",
 func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
 	fmt.Println("starting init_marble")
 
-	if len(args) != 5 {
+	if len(args) != 6 {
 		return shim.Error("Incorrect number of arguments. Expecting 5")
 	}
 
@@ -238,10 +235,12 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	id := args[0]
-	contact := strings.ToLower(args[1])
-	user_id := args[3]
-	authed_by_company := args[4]
+	contact := args[1]
 	balance, err := strconv.Atoi(args[2])
+	title := args[3]
+	user_id := args[4]
+	authed_by_company := args[5]
+
 	if err != nil {
 		return shim.Error("3rd argument must be a numeric string")
 	}
@@ -259,18 +258,45 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	//check if marble id already exists
-	marble, err := get_marble(stub, id)
+	v, err := get_marble(stub, id)
 	if err == nil {
 		fmt.Println("This marble already exists - " + id)
-		fmt.Println(marble)
+		fmt.Println(v)
 		return shim.Error("This marble already exists - " + id)  //all stop a marble by this id exists
 	}
 
+	var marble Marble
+
+	marble.ObjectType = "marble"
+	marble.Id = id
+	marble.Contact = contact
+	marble.Balance = balance
+	marble.Title = title
+	marble.User.Id = user_id
+	marble.User.Username = user.Username
+	marble.User.Company = user.Company
+	marble.Check[New].UserID = user_id
+	marble.Check[New].Name = user.Username
+	marble.Check[New].Review=Success
+	marble.Check[New].Date = time.Now().Format("2006-01-02 15:04:05")
+	marble.Check[New].Comment = "new marbles"
+	marble.Check[SuppApply].UserID = user_id
+	marble.Check[SuppApply].Name   = user.Username
+	marble.Check[SuppApply].Review = Wait
+	marble.Check[SuppApply].Comment = ""
+	for i:=2;i< StepNum;i++{
+		marble.Check[i].UserID=""
+		marble.Check[i].Name   = ""
+		marble.Check[i].Review = Disable
+		marble.Check[i].Comment = ""
+	}
+/*
 	str := `{
 		"docType":"marble", 
 		"id": "` + id + `", 
 		"contact": "` + contact + `", 
-		"balance": ` + strconv.Itoa(balance) + `, 
+		"balance": "` + strconv.Itoa(balance) + `", 
+		"title"  : "`+title+`"
 		"user": {
 			"id": "` + user_id + `", 
 			"username": "` + user.Username + `", 
@@ -292,20 +318,25 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-
+*/
+	jsonAsBytes, _ := json.Marshal(marble)         //convert to array of bytes
+	err = stub.PutState(id, jsonAsBytes)     //rewrite the owner
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 	fmt.Println("- end init_marble")
 	return shim.Success(nil)
 }
 
 //  操作:如果通过提交到下一环节进行复审，如果不通过则返回上一环节
-//      0                1    ,    2        ，    3      ，     4               5
-//    marbleId          id        name      ，   是否通过   ，    next
-//  "09999999999"     "UserId"，"UserName"  ，  “2or3”   ，   下一步UserId    执行阶段
+//      0                1    ,    2        ，    3      ，       4            5         6
+//    marbleId          userID        name      ，   是否通过   ，    next
+//  "09999999999"     "UserId"，"UserName"  ，  “2or3”   ，   下一步UserId    执行阶段    comment
 //
 func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 	var err error
 	fmt.Println("starting submit_marble")
-	if len(args) != 6 {
+	if len(args) != 7 {
 		return shim.Error("Incorrect number of arguments. Expecting 5")
 	}
 
@@ -316,48 +347,68 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 	}
 
 	marbleId := args[0]
-	id := args[1]
+	userID := args[1]
 	name := args[2]
 	next := args[4]
 	step,err := strconv.Atoi(args[5])
 	state,err :=strconv.Atoi(args[3])
-	if err != nil || step > stepNum || step < 0{
+	commont := args[6]
+
+	user, err := get_user(stub, userID)
+	if err != nil {
+		fmt.Println("Failed to find user - " + userID)
+		return shim.Error(err.Error())
+	}
+
+	if !user.Enabled{
+		fmt.Println("user is disable -"+userID)
+		return shim.Error(err.Error())
+	}
+
+	if err != nil || step > StepNum || step < 0{
 		fmt.Println("当前步骤无效")
 	}
 	marble:= getMarblesById(stub,marbleId)
-//	user :=  getUserById(stub,id)
 
-	if marble.Check[step].Id != id{
+	if marble.Check[step].UserID != userID {
 		fmt.Println("当前用户不可审核这次交易，userName： " + name)
-	}
-	//判断交易是否已经被决绝过，防止重复提交
-	if marble.Check[0].Review == Disable{
-		fmt.Println("本次申请己经提交过，请勿重复提交")
 	}
 
 	if marble.Check[step].Review != Wait{
 		fmt.Println("本次交易 未处于等待处理状态 :",marble.Check[step].Review)
 	}
 	if state == Success{  //成功
-		//marble.Check[step].Id = id
+		//marble.Check[step].UserID = userID
 		marble.Check[step].Name = name
 		marble.Check[step].Review = Success
+		marble.Check[step].Date = time.Now().Format("2006-01-02 15:04:05")
+		marble.Check[step].Comment = commont
 		if next != ""{
-			marble.Check[step+1].Id = next
+			marble.Check[step+1].UserID = next
 		}else{
-			marble.Check[step+1].Id = id
+			marble.Check[step+1].UserID = userID
 		}
-		marble.Check[step+1].Review = Success
+		if step == BankRecv{ //如果是银行确认收款成功，设置最后结束的状态
+			marble.Check[EndOf].Review = Success
+			marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
+			marble.Check[EndOf].Comment = "the marbles is end success"
+			marble.Check[EndOf].Name = name
+		}else{
+			marble.Check[EndOf].Review = Wait
+		}
 
 	}else if state == Failure{  //失败
-		//marble.Check[step].Id = id
+		//marble.Check[step].UserID = userID
 		marble.Check[step].Name = name
 		marble.Check[step].Review = Failure
+		marble.Check[step].Date = time.Now().Format("2006-01-02 15:04:05")
 		marble.Check[EndOf].Review = Failure
-		marble.Check[EndOf].Id = id
+		marble.Check[EndOf].UserID = userID
 		marble.Check[EndOf].Name = name
+		marble.Check[EndOf].Comment="the marbles is end failure"
+		marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
 	}else {
-		return shim.Error("")
+		return shim.Error("the marbles state is wrong")
 	}
 
 	jsonAsBytes, _ := json.Marshal(marble)         //convert to array of bytes

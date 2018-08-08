@@ -185,7 +185,7 @@ func getHistory(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 		if err != nil {
 			return shim.Error(err.Error())
 		}
-
+		//historyData.Value
 		var tx AuditHistory
 		tx.TxId = historyData.TxId                     //copy transaction id over
 		json.Unmarshal(historyData.Value, &marble)     //un stringify it aka JSON.parse()
@@ -290,12 +290,22 @@ const(
 //    userID
 //
 //
-func  getAllMarbleByUserID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func  read_allmarble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
 	}
 	userID := args[0]
+	user, err := get_user(stub, userID)
+	if err != nil {
+		fmt.Println("Failed to find user - " + userID)
+		return shim.Error(err.Error())
+	}
+
+	if !user.Enabled{
+		fmt.Println("user is disable -"+userID)
+		return shim.Error(err.Error())
+	}
 	var needMarbles []Marble
 	marbles,err:= getAllMarbles(stub)
 	if err != nil{
@@ -316,7 +326,7 @@ func  getAllMarbleByUserID(stub shim.ChaincodeStubInterface, args []string) pb.R
 		}
 
 		for j:=0;j<4;j++{
-			if marbles[i].Check[j].Id == userID{
+			if marbles[i].Check[j].UserID == userID{
 				needMarbles = append(needMarbles, marbles[i])
 				continue
 			}
@@ -365,55 +375,47 @@ const(
 //     userID         查询阶段                   状态
 //    “bankID”      “SuppRepayment”           “Wait”
 //
-func  getAllNeedReviewByUserID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func  read_allstate(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	if len(args) != 4 {
+	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
 	}
-
-	startKey := args[0]
-	endKey := args[1]
-	stepNum ,err:= strconv.Atoi(args[3])
-	resultsIterator, err := stub.GetStateByRange(startKey, endKey)
-	if err != nil {
+	userID := args[0]
+	stage,err:= strconv.Atoi(args[1])   //阶段
+	state,err := strconv.Atoi(args[2])  //状态
+	var needMarbles []Marble
+	marbles,err:= getAllMarbles(stub)
+	if err != nil{
+		fmt.Println("getAllMarblesByUserID err :",err.Error())
 		return shim.Error(err.Error())
 	}
-	defer resultsIterator.Close()
-	var marble Marble
-	// buffer is a JSON array containing QueryResults
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
 
-	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		aKeyValue, err := resultsIterator.Next()
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		queryResultKey := aKeyValue.Key
-		queryResultValue := aKeyValue.Value
-		json.Unmarshal(queryResultValue, &marble)
-		if marble.Check[stepNum].Id !=args[2] || marble.Check[stepNum].Review == Disable {
+	marblesNum := len(marbles)
+	if marblesNum <=0{
+		fmt.Println("There is no marbles")
+		return shim.Error("There is no marbles")
+	}
+
+	for i:=0;i<marblesNum;i++{
+		if marbles[i].User.Id == userID{
+			if marbles[i].Check[stage].Review == state{
+				//查询到对应阶段的对应状态
+				needMarbles = append(needMarbles, marbles[i])
+			}
 			continue
 		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
+
+		for j:=0;j<4;j++{
+			if marbles[i].Check[j].UserID == userID{
+				if marbles[i].Check[stage].Review == state{
+					//查询到对应阶段的对应状态
+					needMarbles = append(needMarbles, marbles[i])
+				}
+				continue
+			}
 		}
-		buffer.WriteString("{\"Key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(queryResultKey)
-		buffer.WriteString("\"")
-		buffer.WriteString(", \"Record\":")
-		// Record is a JSON object, so we write as-is
-		buffer.WriteString(string(queryResultValue))
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
 	}
-	buffer.WriteString("]")
-
-	fmt.Printf("- getMarblesByRange queryResult:\n%s\n", buffer.String())
-
-	return shim.Success(buffer.Bytes())
+	marblesAsBytes, _:= json.Marshal(needMarbles)
+	return shim.Success(marblesAsBytes)
 
 }

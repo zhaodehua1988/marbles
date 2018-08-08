@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"strconv"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"time"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -32,7 +31,7 @@ type SimpleChaincode struct {
 }
 
 const (
-	stepNum = 8
+	StepNum = 9
 )
 //申请所处的各个阶段
 const (
@@ -40,9 +39,9 @@ const (
 	SuppApply      //供应商申请  supplier apply
 	CompanyCheck   //核心企业审核
 	BankCheck      //银行审核
-	BankLoan       //银行放款
 	SuppRecv       //供应商收款
 	SuppRepayment  //供应商还款
+	BankRecv       //银行确认收款
 	EndOf            //包括成功和失败两种情况
 )
 //确认阶段
@@ -60,11 +59,11 @@ const(
 type Marble struct {
 	ObjectType string             `json:"docType"`  //field for couchdb
 	Id         string             `json:"id"`       //the fieldtags are needed to keep case from bouncing around
-	Title      string             `json:"title"`
 	Contact    string             `json:"contact"` //contract num
 	Balance    int                `json:"balance"`  //the balance of contract
-	User       UserRelation       `json:"user"`     //User
-	Check      [stepNum]CheckInfo `json:"check"`    //申请审核进度 0生成 1供应商 2 核心企业 3 银行 4 银行放款 5供应商收款 6供应商还款  7完成
+	Title      string             `json:"title"`
+	User       UserRelation       `json:"user"`  //User
+	Check      [StepNum]CheckInfo `json:"check"` //申请审核进度 0生成 1供应商 2 核心企业 3 银行 4 银行放款 5供应商收款 6供应商还款  7完成
 }
 
 // ----- User ----- //               User
@@ -78,16 +77,16 @@ type User struct {
 // ----- Owners ----- //
 type UserRelation struct {
 	Id         string `json:"id"`
-	Username   string `json:"username"`    //this is mostly cosmetic/handy, the real relation is by Id not Username
-	Company    string `json:"company"`     //this is mostly cosmetic/handy, the real relation is by Id not Company
+	Username   string `json:"username"`    //this is mostly cosmetic/handy, the real relation is by UserID not Username
+	Company    string `json:"company"`     //this is mostly cosmetic/handy, the real relation is by UserID not Company
 }
 
 type CheckInfo struct{
-	Id         string `json:"id"`              //id
-	Name       string `json:"name"`            //name
-	Date       time.Time
-	Review     int    `json："review"`         //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
-	Comment    string `json:"comment"`         //备注
+	UserID  string `json:"userid"`   //id
+	Name    string `json:"name"`     //name
+	Date    string `json:"date"`     //操作的日期
+	Review  int    `json："review"`         //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
+	Comment string `json:"comment"`         //备注
 }
 
 // ============================================================================================================================
@@ -199,9 +198,11 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if function == "disable_owner"{     //disable a marble owner from appearing on the UI
 		return disable_owner(stub, args)
 	} else if function == "review_marble"{
-		return review_marble(stub,args)
+		return review_marble(stub,args)        //对marble的审核，或者放款，还款等操作
 	}else if function == "read_allmarble"{
-		return getAllMarbleByUserID(stub,args)
+		return read_allmarble(stub,args)      //
+	}else if function == "read_allstate"{
+		return read_allstate(stub,args)
 	}
 	// error out
 	fmt.Println("Received unknown invoke function name - " + function)
