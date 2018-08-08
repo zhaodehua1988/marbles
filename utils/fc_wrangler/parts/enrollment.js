@@ -150,6 +150,59 @@ module.exports = function (logger) {
 		});
 	}
 
+	//registee: {enrollmentID: 'user1',mspId: 'Org1MSP', affiliation: 'org1.department1',role: 'client'}
+	enrollment.register = function(admin_from_store,registee,options){
+
+		if (admin_from_store && admin_from_store.isEnrolled()) {
+		} else {
+			throw new Error('Failed to get admin.... ');
+		}
+		
+		var client = new FabricClient();
+		var tlsOptions = {
+			trustedRoots: [options.ca_tls_opts.pem],								//pem cert required
+			verify: false
+		};
+		var cryptoSuite = FabricClient.newCryptoSuite();
+		cryptoSuite.setCryptoKeyStore(
+			FabricClient.newCryptoKeyStore({
+				path: options.kvs_path 							//store crypto in the kvs directory
+			})
+		);
+		client.setCryptoSuite(cryptoSuite);
+		var ca_client = new CaService(options.ca_url, tlsOptions, options.ca_name,cryptoSuite);	//ca_name is important for the IBM Cloud service
+		FabricClient.newDefaultKeyValueStore({
+			path: options.kvs_path 							//store crypto in the kvs directory
+		}).then(function (store) {
+			client.setStateStore(store);
+
+			// at this point we should have the admin user
+			// first need to register the user with the CA server
+			return ca_client.register(registee, admin_from_store);
+		}).then((secret) => {
+			// next we need to enroll the user with CA server
+			logger.info('Successfully registered %s - secret: %s', registee.enrollmentID, secret);
+
+			return ca_client.enroll({enrollmentID: registee.enrollmentID, enrollmentSecret: secret});
+		}).then((enrollment) => {
+		logger.info('Successfully enrolled member user "%s" ',registee.enrollmentID);
+		return client.createUser(
+			{username: registee.enrollmentID,
+			mspid: registee.mspId,
+			cryptoContent: { privateKeyPEM: enrollment.key.toBytes(), signedCertPEM: enrollment.certificate }
+			});
+		}).then(()=>{
+			logger.info('%s was successfully registered and enrolled and is ready to interact with the fabric network',registee.enrollmentID);
+
+		}).catch((err) => {
+			logger.error('Failed to register: %s, error: %v',registee.enrollmentID, err);
+			if(err.toString().indexOf('Authorization') > -1) {
+				console.error('Authorization failures may be caused by having admin credentials from a previous CA instance.\n' +
+				'Try again after deleting the contents of the store directory ');
+			}
+		});
+	};
+
 	//-----------------------------------------------------------------
 	// Enroll with Admin Certs - use this for install || instantiate || creating a channel
 	//-----------------------------------------------------------------

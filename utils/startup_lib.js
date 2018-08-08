@@ -192,10 +192,25 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 				}
 			} else {
 				enrollObj = obj;
-				if (cb) cb(null);
+				if (cb) cb(null,enrollObj);
 			}
 		});
 	};
+
+	startup_lib.register_user = function (admin,cb) {
+		for(let i = 1; i < 4; i++){
+			let opt = cp.makeEnrollmentOptions(i);
+			fcw.register(opt,admin, {enrollmentID: opt.enroll_id, mspId: opt.msp_id, affiliation: 'org1',role: 'client'}, function (errCode, obj) {
+				if (errCode != null) {
+					logger.error('could not enroll...');
+				} else {
+					enrollObj = obj;
+					if (cb) cb(null);
+				}
+			});
+		}
+	};
+
 
 	// Create marbles and marble owners, owners first
 	startup_lib.create_assets = function (build_marbles_users) {

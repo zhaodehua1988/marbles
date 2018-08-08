@@ -148,13 +148,18 @@ if (config_error) {
 	console.log('\n');
 
 	// --- [1] Test enrolling with our CA --- //
-	startup_lib.enroll_admin(1, function (e) {
+	startup_lib.enroll_admin(1, function (e,enrollObj) {
 		if (e != null) {
 			logger.warn('Error enrolling admin');
 			ws_server.record_state('enrolling', 'failed');
 			ws_server.broadcast_state();
 			startup_lib.startup_unsuccessful(host, port);
 		} else {
+			try {
+				startup_lib.register_user(enrollObj.submitter);				
+			} catch (error) {
+				logger.error(error);
+			}
 			logger.info('Success enrolling admin');
 			ws_server.record_state('enrolling', 'success');
 			ws_server.broadcast_state();

@@ -127,6 +127,25 @@ module.exports = function (g_options, logger) {
 		});
 	};
 
+	//register
+	fcw.register = function (options, admin,registee, cb_done) {
+		let opts = ha.get_ca(options);
+		enrollment.register(admin, registee, opts, function (err, resp) {
+			if (err != null) {
+				opts = ha.get_next_ca(options);							//try another CA
+				if (opts) {
+					logger.info('Retrying enrollment on different ca');
+					fcw.register(options ,admin,registee, cb_done);
+				} else {
+					if (cb_done) cb_done(err, resp);					//out of CAs, give up
+				}
+			} else {
+				ha.success_ca_position = ha.using_ca_position;			//remember the last good one
+				if (cb_done) cb_done(err, resp);
+			}
+		});
+	};
+
 	// enroll with admin cert
 	fcw.enrollWithAdminCert = function (options, cb_done) {
 		enrollment.enrollWithAdminCert(options, cb_done);
