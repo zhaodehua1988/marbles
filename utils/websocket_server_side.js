@@ -73,11 +73,12 @@ module.exports = function (cp, fcw, logger) {
 		if (data.type === 'create') {
 			logger.info('[ws] create marbles req');
 			options.args = {
-				color: data.color,
-				size: data.size,
+				contact: data.contact,
+				title: data.title,
+				balance: data.balance,
 				marble_owner: data.username,
 				owners_company: data.company,
-				owner_id: data.owner_id,
+				owner_id: data.username,
 				auth_company: process.env.marble_company,
 			};
 

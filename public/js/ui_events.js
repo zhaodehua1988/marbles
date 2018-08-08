@@ -28,11 +28,13 @@ $(document).on('ready', function () {
 	// =================================================================================
 	$('#createMarbleButton').click(function () {
 		console.log('creating marble');
+		var un = Cookies.get('username');
 		var obj = {
 			type: 'create',
-			color: $('.colorSelected').attr('color'),
-			size: $('select[name="size"]').val(),
-			username: $('select[name="user"]').val(),
+			balance: $('input[name="balance"]').val(),
+			title: $('input[name="title"]').val(),
+			contact: $('input[name="contact"]').val(),
+			username: un,
 			company: $('input[name="company"]').val(),
 			owner_id: $('input[name="owner_id"]').val(),
 			v: 1

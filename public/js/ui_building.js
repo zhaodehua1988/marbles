@@ -30,10 +30,11 @@ function build_marble(marble) {
 
 	if (auditingMarble && marble.id === auditingMarble.id) auditing = 'auditingMarble';
 
-	html += '<span id="' + marble.id + '" class="ball ' + size + ' ' + colorClass + ' ' + auditing + ' title="' + marble.id + '"';
-	html += ' username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '"></span>';
+	// html += '<span id="' + marble.id + '" class="ball ' + size + ' ' + colorClass + ' ' + auditing + ' title="' + marble.id + '"';
+	// html += ' username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '"></span>';
+	html += '<tr class="item"><td>'+marble.id+'</td><td>'+size+'</td><td>'+colorClass+'</td><td>'+marble.owner.company+'</td><td>'+marble.owner.id+'</td></tr>';
 
-	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.innerMarbleWrap').prepend(html);
+	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.innerMarbleContainer').prepend(html);
 	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.noMarblesMsg').hide();
 	return html;
 }
@@ -43,7 +44,24 @@ function populate_users_marbles(msg) {
 
 	//reset
 	console.log('[ui] clearing marbles for user ' + msg.owner_id);
-	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.innerMarbleWrap').html('<i class="fa fa-plus addMarble"></i>');
+	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.innerMarbleWrap').html(
+	`
+		<div class="innerMarbleWrap">
+			<table>
+				<th>
+					<td>id</td>
+					<td>title</td>
+					<td>balance</td>
+					<td>contact</td>
+					<td>create date</td>
+				</th>
+			</table>
+			<table class="innerMarbleContainer">
+			</table>
+			<i class="fa fa-plus addMarble"></i>
+		</div>
+		<i class="fa fa-plus addMarble"></i>
+	`);
 	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.noMarblesMsg').show();
 
 	for (var i in msg.marbles) {
@@ -96,7 +114,20 @@ function build_user_panels(data) {
 						<span class="fa fa-thumb-tack marblesFix" title="Never Hide Owner"></span>
 						` + disableHtml + `
 					</div>
-					<div class="innerMarbleWrap"><i class="fa fa-plus addMarble"></i></div>
+					<div class="innerMarbleWrap">
+						<table>
+							<th>
+								<td>id</td>
+								<td>title</td>
+								<td>balance</td>
+								<td>contact</td>
+								<td>create date</td>
+							</th>
+						</table>
+						<table class="innerMarbleContainer">
+						</table>
+						<i class="fa fa-plus addMarble"></i>
+					</div>
 					<div class="noMarblesMsg hint">lost all marbles</div>
 				</div>`;
 
@@ -107,40 +138,40 @@ function build_user_panels(data) {
 
 	//drag and drop marble
 	$('.innerMarbleWrap').sortable({ connectWith: '.innerMarbleWrap', items: 'span' }).disableSelection();
-	$('.innerMarbleWrap').droppable({
-		drop:
-		function (event, ui) {
-			var marble_id = $(ui.draggable).attr('id');
+	// $('.innerMarbleWrap').droppable({
+	// 	drop:
+	// 	function (event, ui) {
+	// 		var marble_id = $(ui.draggable).attr('id');
 
-			//  ------------ Delete Marble ------------ //
-			if ($(event.target).attr('id') === 'trashbin') {
-				console.log('removing marble', marble_id);
-				show_tx_step({ state: 'building_proposal' }, function () {
-					var obj = {
-						type: 'delete_marble',
-						id: marble_id,
-						v: 1
-					};
-					ws.send(JSON.stringify(obj));
-					$(ui.draggable).addClass('invalid bounce');
-					refreshHomePanel();
-				});
-			}
+	// 		//  ------------ Delete Marble ------------ //
+	// 		if ($(event.target).attr('id') === 'trashbin') {
+	// 			console.log('removing marble', marble_id);
+	// 			show_tx_step({ state: 'building_proposal' }, function () {
+	// 				var obj = {
+	// 					type: 'delete_marble',
+	// 					id: marble_id,
+	// 					v: 1
+	// 				};
+	// 				ws.send(JSON.stringify(obj));
+	// 				$(ui.draggable).addClass('invalid bounce');
+	// 				refreshHomePanel();
+	// 			});
+	// 		}
 
-			//  ------------ Transfer Marble ------------ //
-			else {
-				var dragged_owner_id = $(ui.draggable).attr('owner_id');
-				var dropped_owner_id = $(event.target).parents('.marblesWrap').attr('owner_id');
+	// 		//  ------------ Transfer Marble ------------ //
+	// 		else {
+	// 			var dragged_owner_id = $(ui.draggable).attr('owner_id');
+	// 			var dropped_owner_id = $(event.target).parents('.marblesWrap').attr('owner_id');
 
-				console.log('dropped a marble', dragged_owner_id, dropped_owner_id);
-				if (dragged_owner_id != dropped_owner_id) {										//only transfer marbles that changed owners
-					$(ui.draggable).addClass('invalid bounce');
-					transfer_marble(marble_id, dropped_owner_id);
-					return true;
-				}
-			}
-		}
-	});
+	// 			console.log('dropped a marble', dragged_owner_id, dropped_owner_id);
+	// 			if (dragged_owner_id != dropped_owner_id) {										//only transfer marbles that changed owners
+	// 				$(ui.draggable).addClass('invalid bounce');
+	// 				transfer_marble(marble_id, dropped_owner_id);
+	// 				return true;
+	// 			}
+	// 		}
+	// 	}
+	// });
 
 	//user count
 	$('#foundUsers').html(data.length);

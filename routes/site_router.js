@@ -12,7 +12,9 @@ var cachebust_css = Date.now();
 
 module.exports = function (logger, cp) {
 	var app = express();
-
+	const bodyParser = require('body-parser');
+	app.use(bodyParser.json());
+	app.use(bodyParser.urlencoded({extended: true}));
 	// ============================================================================================================================
 	// Root
 	// ============================================================================================================================
@@ -28,7 +30,8 @@ module.exports = function (logger, cp) {
 	});
 
 	app.post('/login', function (req, res) {
-		req.session.user = { username: 'Admin' };
+		req.session.user = { username: req.body.username };
+		res.cookie('username',req.body.username);
 		res.redirect('/home');
 	});
 

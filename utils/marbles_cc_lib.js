@@ -90,8 +90,9 @@ module.exports = function (enrollObj, g_options, fcw, logger) {
 			cc_function: 'init_marble',
 			cc_args: [
 				'm' + leftPad(Date.now() + randStr(5), 19),
-				options.args.color,
-				options.args.size,
+				options.args.contact,
+				options.args.balance,
+				options.args.title,
 				options.args.owner_id,
 				options.args.auth_company
 			],

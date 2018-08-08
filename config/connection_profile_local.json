@@ -7,7 +7,7 @@
     "client": {
         "organization": "Org1MSP",
         "credentialStore": {
-            "path": "/home/zdh/go/src/github.com/hyperledger/marbles/network/hfc-key-store"
+            "path": "/home/van/app/blockchain/fabric/fabric-samples/marbles/network/hfc-key-store"
         }
     },
     "channels": {
@@ -36,10 +36,10 @@
                 "fabric-ca"
             ],
             "x-adminCert": {
-                "path": "/home/zdh/go/src/github.com/hyperledger/marbles/network/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/admincerts/Admin@org1.example.com-cert.pem"
+                "path": "/home/van/app/blockchain/fabric/fabric-samples/marbles/network/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/admincerts/Admin@org1.example.com-cert.pem"
             },
             "x-adminKeyStore": {
-                "path": "/home/zdh/go/src/github.com/hyperledger/marbles/network/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/"
+                "path": "/home/van/app/blockchain/fabric/fabric-samples/marbles/network/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/"
             }
         }
     },

@@ -218,7 +218,7 @@ func disable_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 
 //新建一个申请()
 //      0      ,      1  ,           2  ,     3                4        ,           5,
-//     id      ,    contact,      balance,   title           user id    ,     authorizing_company,
+//     id      ,    contact,      balance,   title           user    ,             company,
 // "m999999999", "13188888888",     "35",    "title"       "o9999999999999",        "inter",
 func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error

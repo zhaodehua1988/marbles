@@ -241,17 +241,17 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 					}
 					logger.debug('prepared marbles obj', marbles.length, marbles);
 
-					// --- Create Marbles--- //
-					setTimeout(function () {
-						async.each(marbles, function (owner_obj, marble_cb) { 			//iter through each one
-							startup_lib.create_marbles(owner_obj.id, owner_obj.username, marble_cb);
-						}, function (err) {												//marble owner creation finished
-							logger.debug('- finished creating asset');
-							if (err == null) {
-								startup_lib.all_done();												//delay for peer catch up
-							}
-						});
-					}, cp.getBlockDelay());
+					// --- Create Marbles--- unused//
+					// setTimeout(function () {
+					// 	async.each(marbles, function (owner_obj, marble_cb) { 			//iter through each one
+					// 		startup_lib.create_marbles(owner_obj.id, owner_obj.username, marble_cb);
+					// 	}, function (err) {												//marble owner creation finished
+					// 		logger.debug('- finished creating asset');
+					// 		if (err == null) {
+					// 			startup_lib.all_done();												//delay for peer catch up
+					// 		}
+					// 	});
+					// }, cp.getBlockDelay());
 				}
 			});
 		}

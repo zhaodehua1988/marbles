@@ -73,7 +73,7 @@ function connect_to_server() {
 
 				start_up = false;
 				$('.marblesWrap').each(function () {
-					if ($(this).find('.innerMarbleWrap').find('.ball').length === 0) {
+					if ($(this).find('.innerMarbleContainer').find('.item').length === 0) {
 						$(this).find('.noMarblesMsg').show();
 					}
 				});

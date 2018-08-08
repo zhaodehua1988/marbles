@@ -72,8 +72,8 @@ block content
 		form#loginPanel(method="POST" action="#")
 			p Enter
 			hr
-			input(type="text" placeholder="username" value="admin" name="username")
-			//- select
-			//- 	each val,i in users
-			//- 		option(value=val) #{val}
+			//- input(type="text" placeholder="username" value="admin" name="username")
+			select(name="username")
+				each val,i in users
+					option(value=val) #{val}
 			button(type="submit") Login
