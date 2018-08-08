@@ -124,7 +124,7 @@ func getAllMarbles(stub shim.ChaincodeStubInterface)(marbles []Marble,err error)
 	for resultsIterator.HasNext() {
 		aKeyValue, err := resultsIterator.Next()
 		if err != nil {
-			return _,err
+			return marbles,err
 		}
 		queryKeyAsStr := aKeyValue.Key
 		queryValAsBytes := aKeyValue.Value

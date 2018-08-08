@@ -31,7 +31,7 @@ import (
 type SimpleChaincode struct {
 }
 
-var (
+const (
 	stepNum = 8
 )
 //申请所处的各个阶段
@@ -52,7 +52,6 @@ const(
 	Success
 	Failure
 )
-
 // ============================================================================================================================
 // Asset Definitions - The ledger will store marbles and owners
 // ============================================================================================================================
@@ -66,7 +65,6 @@ type Marble struct {
 	Balance    int                `json:"balance"`  //the balance of contract
 	User       UserRelation       `json:"user"`     //User
 	Check      [stepNum]CheckInfo `json:"check"`    //申请审核进度 0生成 1供应商 2 核心企业 3 银行 4 银行放款 5供应商收款 6供应商还款  7完成
-
 }
 
 // ----- User ----- //               User
@@ -102,6 +100,7 @@ func main() {
 	}
 }
 
+
 // ============================================================================================================================
 // Init - initialize the chaincode 
 //
@@ -122,6 +121,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	var number int
 	var err error
 	txId := stub.GetTxID()
+	
 	fmt.Println("Init() is running")
 	fmt.Println("Transaction ID:", txId)
 	fmt.Println("  GetFunctionAndParameters() function:", funcName)
@@ -168,6 +168,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(nil)
 }
 
+
 // ============================================================================================================================
 // Invoke - Our entry point for Invocations
 // ============================================================================================================================
@@ -202,7 +203,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}else if function == "read_allmarble"{
 		return getAllMarbleByUserID(stub,args)
 	}
-
 	// error out
 	fmt.Println("Received unknown invoke function name - " + function)
 	return shim.Error("Received unknown invoke function name - '" + function + "'")

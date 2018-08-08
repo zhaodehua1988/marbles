@@ -112,6 +112,7 @@ func delete_marble(stub shim.ChaincodeStubInterface, args []string) (pb.Response
 	fmt.Println("- end delete_marble")
 	return shim.Success(nil)
 }
+
 // ============================================================================================================================
 // Init User - create a new owner aka end user, store into chaincode state
 //
