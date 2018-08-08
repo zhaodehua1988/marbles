@@ -98,5 +98,25 @@ module.exports = function (cp, logger) {
 		}
 	};
 
+	// get all enrollment users
+	helper.getEnrollObjs = function (caKey) {
+		if (caKey === undefined || caKey == null) {
+			logger.error('CA key not passed');
+			return null;
+		} else {
+			var ca = helper.getCA(caKey);
+			if (ca && ca.registrar) {
+				var ret = [];
+				for (var i=0; i<ca.registrar.length; i++){
+					ret.push(ca.registrar[i].enrollId);
+				}
+				return ret;
+			} else {
+				logger.error('Cannot find any enroll obj.', caKey);
+				return null;
+			}
+		}
+	};
+
 	return helper;
 };

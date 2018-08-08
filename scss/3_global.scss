@@ -314,8 +314,8 @@ $auditSize: 333px;
 	display: inline-block;
 	font-size:275px;
 	color: transparent;
-	border: 2px dashed $main_color;
-	border-radius: 200px;
+	// border: 2px dashed $main_color;
+	// border-radius: 200px;
 	width: 250px;
 	height: 250px;
 	vertical-align: middle;
@@ -376,6 +376,10 @@ $auditSize: 333px;
 	border-top-right-radius: 3px;
 }
 
+.createInput{
+	min-width: 180px;
+	width:180px;
+}
 
 // --------- marble colors ---------
 .white{color:#FFFEF3;}
@@ -405,7 +409,6 @@ $auditSize: 333px;
 	display: inline-block;
 }
 .colorInput{
-	width:105px;
 	border: 1px solid $acc_color2;
 	border-radius: 5px;
 	padding: 5px;

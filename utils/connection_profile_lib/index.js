@@ -222,6 +222,12 @@ module.exports = function (config_filename, logger) {
 			};
 		}
 	};
+	cp.getAllEnrollObj = function () {
+		const org_2_use = cp.getClientOrg();
+		const first_ca = cp.getFirstCaName(org_2_use);
+		var ret = cp.getEnrollObjs(first_ca);
+		return ret;
+	};
 
 	// build the enrollment options using an admin cert
 	cp.makeEnrollmentOptionsUsingCert = function () {

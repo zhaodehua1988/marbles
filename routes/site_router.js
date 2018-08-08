@@ -24,7 +24,7 @@ module.exports = function (logger, cp) {
 	// Login
 	// ============================================================================================================================
 	app.get('/login', function (req, res) {
-		res.render('login', { title: 'Marbles - Login', bag: build_bag(req) });
+		res.render('login', { title: 'Marbles - Login', bag: build_bag(req), users: cp.getAllEnrollObj() });
 	});
 
 	app.post('/login', function (req, res) {
