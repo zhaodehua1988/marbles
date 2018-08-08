@@ -25,6 +25,7 @@ import (
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"fmt"
 )
 
 // ============================================================================================================================
@@ -46,10 +47,12 @@ func get_marble(stub shim.ChaincodeStubInterface, id string) (Marble, error) {
 }
 
 // ============================================================================================================================
-// Get Owner - get the owner asset from ledger
+// Get User - get the owner asset from ledger
 // ============================================================================================================================
-func get_owner(stub shim.ChaincodeStubInterface, id string) (Owner, error) {
-	var owner Owner
+func get_user(stub shim.ChaincodeStubInterface, id string) (User, error) {
+
+
+	var owner User
 	ownerAsBytes, err := stub.GetState(id)                     //getState retreives a key/value from the ledger
 	if err != nil {                                            //this seems to always succeed, even if key didn't exist
 		return owner, errors.New("Failed to get owner - " + id)
@@ -57,7 +60,7 @@ func get_owner(stub shim.ChaincodeStubInterface, id string) (Owner, error) {
 	json.Unmarshal(ownerAsBytes, &owner)                       //un stringify it aka JSON.parse()
 
 	if len(owner.Username) == 0 {                              //test if owner is actually here or just nil
-		return owner, errors.New("Owner does not exist - " + id + ", '" + owner.Username + "' '" + owner.Company + "'")
+		return owner, errors.New("User does not exist - " + id + ", '" + owner.Username + "' '" + owner.Company + "'")
 	}
 	
 	return owner, nil
@@ -76,4 +79,60 @@ func sanitize_arguments(strs []string) error{
 		}
 	}
 	return nil
+}
+
+
+
+func getMarblesById(stub shim.ChaincodeStubInterface,id string)( marble Marble){
+
+	var err error
+	fmt.Println("starting read")
+	valAsbytes, err := stub.GetState(id)           //get the var from ledger
+	if err != nil {
+		fmt.Sprintf("{\"Error\":\"Failed to get state for " + id + "\"}")
+	}
+
+	json.Unmarshal(valAsbytes, &marble)
+	return marble
+}
+
+func getUserById(stub shim.ChaincodeStubInterface,id string)( user User){
+
+	var err error
+	fmt.Println("starting read")
+	valAsbytes, err := stub.GetState(id)           //get the var from ledger
+	if err != nil {
+		fmt.Sprintf("{\"Error\":\"Failed to get state for " + id + "\"}")
+	}
+
+	json.Unmarshal(valAsbytes, &user)
+	return user
+}
+
+func getAllMarbles(stub shim.ChaincodeStubInterface)(marbles []Marble,err error){
+
+	//var marble []Marble
+
+	// ---- Get All Marbles ---- //
+	resultsIterator, err := stub.GetStateByRange("m0", "m9999999999999999999")
+	if err != nil {
+		fmt.Println("get All marbles error !")
+
+	}
+	defer resultsIterator.Close()
+
+	for resultsIterator.HasNext() {
+		aKeyValue, err := resultsIterator.Next()
+		if err != nil {
+			return _,err
+		}
+		queryKeyAsStr := aKeyValue.Key
+		queryValAsBytes := aKeyValue.Value
+		fmt.Println("on marble id - ", queryKeyAsStr)
+		var marble Marble
+		json.Unmarshal(queryValAsBytes, &marble)                  //un stringify it aka JSON.parse()
+		marbles = append(marbles, marble)   //add this marble to the list
+	}
+	fmt.Println("marble array - ", marbles)
+	return marbles,nil
 }

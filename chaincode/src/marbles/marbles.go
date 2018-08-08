@@ -20,43 +20,76 @@ under the License.
 package main
 
 import (
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"fmt"
 	"strconv"
-
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"time"
 )
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
+var (
+	stepNum = 8
+)
+//申请所处的各个阶段
+const (
+	New = iota     //0
+	SuppApply      //供应商申请  supplier apply
+	CompanyCheck   //核心企业审核
+	BankCheck      //银行审核
+	BankLoan       //银行放款
+	SuppRecv       //供应商收款
+	SuppRepayment  //供应商还款
+	EndOf            //包括成功和失败两种情况
+)
+//确认阶段
+const(
+	Disable = iota //0
+	Wait
+	Success
+	Failure
+)
+
 // ============================================================================================================================
 // Asset Definitions - The ledger will store marbles and owners
 // ============================================================================================================================
-
+//
 // ----- Marbles ----- //
 type Marble struct {
-	ObjectType string        `json:"docType"` //field for couchdb
-	Id       string          `json:"id"`      //the fieldtags are needed to keep case from bouncing around
-	Color      string        `json:"color"`
-	Size       int           `json:"size"`    //size in mm of marble
-	Owner      OwnerRelation `json:"owner"`
+	ObjectType string             `json:"docType"`  //field for couchdb
+	Id         string             `json:"id"`       //the fieldtags are needed to keep case from bouncing around
+	Title      string             `json:"title"`
+	Contact    string             `json:"contact"` //contract num
+	Balance    int                `json:"balance"`  //the balance of contract
+	User       UserRelation       `json:"user"`     //User
+	Check      [stepNum]CheckInfo `json:"check"`    //申请审核进度 0生成 1供应商 2 核心企业 3 银行 4 银行放款 5供应商收款 6供应商还款  7完成
+
 }
 
-// ----- Owners ----- //
-type Owner struct {
+// ----- User ----- //               User
+type User struct {
 	ObjectType string `json:"docType"`     //field for couchdb
 	Id         string `json:"id"`
 	Username   string `json:"username"`
 	Company    string `json:"company"`
 	Enabled    bool   `json:"enabled"`     //disabled owners will not be visible to the application
 }
-
-type OwnerRelation struct {
+// ----- Owners ----- //
+type UserRelation struct {
 	Id         string `json:"id"`
 	Username   string `json:"username"`    //this is mostly cosmetic/handy, the real relation is by Id not Username
 	Company    string `json:"company"`     //this is mostly cosmetic/handy, the real relation is by Id not Company
+}
+
+type CheckInfo struct{
+	Id         string `json:"id"`              //id
+	Name       string `json:"name"`            //name
+	Date       time.Time
+	Review     int    `json："review"`         //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
+	Comment    string `json:"comment"`         //备注
 }
 
 // ============================================================================================================================
@@ -68,7 +101,6 @@ func main() {
 		fmt.Printf("Error starting Simple chaincode - %s", err)
 	}
 }
-
 
 // ============================================================================================================================
 // Init - initialize the chaincode 
@@ -90,7 +122,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	var number int
 	var err error
 	txId := stub.GetTxID()
-	
 	fmt.Println("Init() is running")
 	fmt.Println("Transaction ID:", txId)
 	fmt.Println("  GetFunctionAndParameters() function:", funcName)
@@ -137,7 +168,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(nil)
 }
 
-
 // ============================================================================================================================
 // Invoke - Our entry point for Invocations
 // ============================================================================================================================
@@ -157,9 +187,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return delete_marble(stub, args)
 	} else if function == "init_marble" {      //create a new marble
 		return init_marble(stub, args)
-	} else if function == "set_owner" {        //change owner of a marble
-		return set_owner(stub, args)
-	} else if function == "init_owner"{        //create a new marble owner
+	}else if function == "init_owner"{        //create a new marble owner
 		return init_owner(stub, args)
 	} else if function == "read_everything"{   //read everything, (owners + marbles + companies)
 		return read_everything(stub)
@@ -169,6 +197,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return getMarblesByRange(stub, args)
 	} else if function == "disable_owner"{     //disable a marble owner from appearing on the UI
 		return disable_owner(stub, args)
+	} else if function == "review_marble"{
+		return review_marble(stub,args)
+	}else if function == "read_allmarble"{
+		return getAllMarbleByUserID(stub,args)
 	}
 
 	// error out

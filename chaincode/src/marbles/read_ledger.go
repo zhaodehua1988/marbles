@@ -26,6 +26,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"strconv"
 )
 
 // ============================================================================================================================
@@ -92,8 +93,8 @@ func read(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 // ============================================================================================================================
 func read_everything(stub shim.ChaincodeStubInterface) pb.Response {
 	type Everything struct {
-		Owners   []Owner   `json:"owners"`
-		Marbles  []Marble  `json:"marbles"`
+		Owners   []User   `json:"owners"`
+		Marbles  []Marble `json:"marbles"`
 	}
 	var everything Everything
 
@@ -133,7 +134,7 @@ func read_everything(stub shim.ChaincodeStubInterface) pb.Response {
 		queryKeyAsStr := aKeyValue.Key
 		queryValAsBytes := aKeyValue.Value
 		fmt.Println("on owner id - ", queryKeyAsStr)
-		var owner Owner
+		var owner User
 		json.Unmarshal(queryValAsBytes, &owner)                   //un stringify it aka JSON.parse()
 
 		if owner.Enabled {                                        //only return enabled owners
@@ -261,4 +262,158 @@ func getMarblesByRange(stub shim.ChaincodeStubInterface, args []string) pb.Respo
 	fmt.Printf("- getMarblesByRange queryResult:\n%s\n", buffer.String())
 
 	return shim.Success(buffer.Bytes())
+}
+
+/*
+//申请所处的各个阶段
+const (
+	New = iota     //0
+	SuppApply      //供应商申请  supplier apply
+	CompanyCheck   //核心企业审核
+	BankCheck      //银行审核
+	BankLoan       //银行放款
+	SuppRecv       //供应商收款
+	SuppRepayment  //供应商还款
+	EndOf            //包括成功和失败两种情况
+)
+//申请的状态
+const(
+	Disable = iota //0
+	Wait
+	Success
+	Failure
+)
+
+*/
+//根据id查询所有相关的审核
+//       0
+//    userID
+//
+//
+func  getAllMarbleByUserID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+	userID := args[0]
+	var needMarbles []Marble
+	marbles,err:= getAllMarbles(stub)
+	if err != nil{
+		fmt.Println("getAllMarblesByUserID err :",err.Error())
+		return shim.Error(err.Error())
+	}
+
+	marblesNum := len(marbles)
+	if marblesNum <=0{
+		fmt.Println("There is no marbles")
+		return shim.Error("There is no marbles")
+	}
+
+	for i:=0;i<marblesNum;i++{
+		if marbles[i].User.Id == userID{
+			needMarbles = append(needMarbles, marbles[i])
+			continue
+		}
+
+		for j:=0;j<4;j++{
+			if marbles[i].Check[j].Id == userID{
+				needMarbles = append(needMarbles, marbles[i])
+				continue
+			}
+		}
+	}
+	marblesAsBytes, _:= json.Marshal(needMarbles)
+	return shim.Success(marblesAsBytes)
+
+}
+
+/*
+//申请所处的各个阶段
+const (
+	New = iota     //0
+	SuppApply      //供应商申请  supplier apply
+	CompanyCheck   //核心企业审核
+	BankCheck      //银行审核
+	BankLoan       //银行放款
+	SuppRecv       //供应商收款
+	SuppRepayment  //供应商还款
+	EndOf            //包括成功和失败两种情况
+)
+//申请的状态
+const(
+	Disable = iota //0
+	Wait
+	Success
+	Failure
+)
+
+*/
+//根据userId查询需要审核的申请
+//     0                    1                          2
+//   userID              查询阶段                     申请的状态
+//   "123456"        0～7（SuppApply）          1（waite） 2（success）3（failure）
+//-------------------------------------------------------------------------------
+//example 1
+//  供应商查询银行所有审核通过的申请
+//        0                 1                  2
+//       userID           查询阶段            申请状态
+//   "supplierID"      “BankCheck”          “Success”
+
+//example 2
+//银行查询所有未还款项
+//      0               1                        3
+//     userID         查询阶段                   状态
+//    “bankID”      “SuppRepayment”           “Wait”
+//
+func  getAllNeedReviewByUserID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	if len(args) != 4 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	startKey := args[0]
+	endKey := args[1]
+	stepNum ,err:= strconv.Atoi(args[3])
+	resultsIterator, err := stub.GetStateByRange(startKey, endKey)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	defer resultsIterator.Close()
+	var marble Marble
+	// buffer is a JSON array containing QueryResults
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		aKeyValue, err := resultsIterator.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		queryResultKey := aKeyValue.Key
+		queryResultValue := aKeyValue.Value
+		json.Unmarshal(queryResultValue, &marble)
+		if marble.Check[stepNum].Id !=args[2] || marble.Check[stepNum].Review == Disable {
+			continue
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(queryResultKey)
+		buffer.WriteString("\"")
+		buffer.WriteString(", \"Record\":")
+		// Record is a JSON object, so we write as-is
+		buffer.WriteString(string(queryResultValue))
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	fmt.Printf("- getMarblesByRange queryResult:\n%s\n", buffer.String())
+
+	return shim.Success(buffer.Bytes())
+
 }

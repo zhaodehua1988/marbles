@@ -98,9 +98,9 @@ func delete_marble(stub shim.ChaincodeStubInterface, args []string) (pb.Response
 		return shim.Error(err.Error())
 	}
 
-	// check authorizing company (see note in set_owner() about how this is quirky)
-	if marble.Owner.Company != authed_by_company{
-		return shim.Error("The company '" + authed_by_company + "' cannot authorize deletion for '" + marble.Owner.Company + "'.")
+	// check authorizing company (see note in set_user() about how this is quirky)
+	if marble.User.Company != authed_by_company{
+		return shim.Error("The company '" + authed_by_company + "' cannot authorize deletion for '" + marble.User.Company + "'.")
 	}
 
 	// remove the marble
@@ -112,83 +112,8 @@ func delete_marble(stub shim.ChaincodeStubInterface, args []string) (pb.Response
 	fmt.Println("- end delete_marble")
 	return shim.Success(nil)
 }
-
 // ============================================================================================================================
-// Init Marble - create a new marble, store into chaincode state
-//
-// Shows off building a key's JSON value manually
-//
-// Inputs - Array of strings
-//      0      ,    1  ,  2  ,      3          ,       4
-//     id      ,  color, size,     owner id    ,  authing company
-// "m999999999", "blue", "35", "o9999999999999", "united marbles"
-// ============================================================================================================================
-func init_marble(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
-	var err error
-	fmt.Println("starting init_marble")
-
-	if len(args) != 5 {
-		return shim.Error("Incorrect number of arguments. Expecting 5")
-	}
-
-	//input sanitation
-	err = sanitize_arguments(args)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	id := args[0]
-	color := strings.ToLower(args[1])
-	owner_id := args[3]
-	authed_by_company := args[4]
-	size, err := strconv.Atoi(args[2])
-	if err != nil {
-		return shim.Error("3rd argument must be a numeric string")
-	}
-
-	//check if new owner exists
-	owner, err := get_owner(stub, owner_id)
-	if err != nil {
-		fmt.Println("Failed to find owner - " + owner_id)
-		return shim.Error(err.Error())
-	}
-
-	//check authorizing company (see note in set_owner() about how this is quirky)
-	if owner.Company != authed_by_company{
-		return shim.Error("The company '" + authed_by_company + "' cannot authorize creation for '" + owner.Company + "'.")
-	}
-
-	//check if marble id already exists
-	marble, err := get_marble(stub, id)
-	if err == nil {
-		fmt.Println("This marble already exists - " + id)
-		fmt.Println(marble)
-		return shim.Error("This marble already exists - " + id)  //all stop a marble by this id exists
-	}
-
-	//build the marble json string manually
-	str := `{
-		"docType":"marble", 
-		"id": "` + id + `", 
-		"color": "` + color + `", 
-		"size": ` + strconv.Itoa(size) + `, 
-		"owner": {
-			"id": "` + owner_id + `", 
-			"username": "` + owner.Username + `", 
-			"company": "` + owner.Company + `"
-		}
-	}`
-	err = stub.PutState(id, []byte(str))                         //store marble with id as key
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	fmt.Println("- end init_marble")
-	return shim.Success(nil)
-}
-
-// ============================================================================================================================
-// Init Owner - create a new owner aka end user, store into chaincode state
+// Init User - create a new owner aka end user, store into chaincode state
 //
 // Shows off building key's value from GoLang Structure
 //
@@ -211,24 +136,25 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 		return shim.Error(err.Error())
 	}
 
-	var owner Owner
-	owner.ObjectType = "marble_owner"
-	owner.Id =  args[0]
-	owner.Username = strings.ToLower(args[1])
-	owner.Company = args[2]
-	owner.Enabled = true
-	fmt.Println(owner)
+	var user User
+	user.ObjectType = "marble_owner"
+	user.Id =  args[0]
+	user.Username = strings.ToLower(args[1])
+	user.Company = args[2]
+	user.Enabled = true
+
+	fmt.Println(user)
 
 	//check if user already exists
-	_, err = get_owner(stub, owner.Id)
+	_, err = get_user(stub, user.Id)
 	if err == nil {
-		fmt.Println("This owner already exists - " + owner.Id)
-		return shim.Error("This owner already exists - " + owner.Id)
+		fmt.Println("This user already exists - " + user.Id)
+		return shim.Error("This user already exists - " + user.Id)
 	}
 
 	//store user
-	ownerAsBytes, _ := json.Marshal(owner)                         //convert to array of bytes
-	err = stub.PutState(owner.Id, ownerAsBytes)                    //store owner by its Id
+	ownerAsBytes, _ := json.Marshal(user)      //convert to array of bytes
+	err = stub.PutState(user.Id, ownerAsBytes) //store user by its Id
 	if err != nil {
 		fmt.Println("Could not store user")
 		return shim.Error(err.Error())
@@ -239,74 +165,7 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 }
 
 // ============================================================================================================================
-// Set Owner on Marble
-//
-// Shows off GetState() and PutState()
-//
-// Inputs - Array of Strings
-//       0     ,        1      ,        2
-//  marble id  ,  to owner id  , company that auth the transfer
-// "m999999999", "o99999999999", united_mables" 
-// ============================================================================================================================
-func set_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var err error
-	fmt.Println("starting set_owner")
-
-	// this is quirky
-	// todo - get the "company that authed the transfer" from the certificate instead of an argument
-	// should be possible since we can now add attributes to the enrollment cert
-	// as is.. this is a bit broken (security wise), but it's much much easier to demo! holding off for demos sake
-
-	if len(args) != 3 {
-		return shim.Error("Incorrect number of arguments. Expecting 3")
-	}
-
-	// input sanitation
-	err = sanitize_arguments(args)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	var marble_id = args[0]
-	var new_owner_id = args[1]
-	var authed_by_company = args[2]
-	fmt.Println(marble_id + "->" + new_owner_id + " - |" + authed_by_company)
-
-	// check if user already exists
-	owner, err := get_owner(stub, new_owner_id)
-	if err != nil {
-		return shim.Error("This owner does not exist - " + new_owner_id)
-	}
-
-	// get marble's current state
-	marbleAsBytes, err := stub.GetState(marble_id)
-	if err != nil {
-		return shim.Error("Failed to get marble")
-	}
-	res := Marble{}
-	json.Unmarshal(marbleAsBytes, &res)           //un stringify it aka JSON.parse()
-
-	// check authorizing company
-	if res.Owner.Company != authed_by_company{
-		return shim.Error("The company '" + authed_by_company + "' cannot authorize transfers for '" + res.Owner.Company + "'.")
-	}
-
-	// transfer the marble
-	res.Owner.Id = new_owner_id                   //change the owner
-	res.Owner.Username = owner.Username
-	res.Owner.Company = owner.Company
-	jsonAsBytes, _ := json.Marshal(res)           //convert to array of bytes
-	err = stub.PutState(args[0], jsonAsBytes)     //rewrite the marble with id as key
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	fmt.Println("- end set owner")
-	return shim.Success(nil)
-}
-
-// ============================================================================================================================
-// Disable Marble Owner
+// Disable Marble User
 //
 // Shows off PutState()
 //
@@ -333,7 +192,7 @@ func disable_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	var authed_by_company = args[1]
 
 	// get the marble owner data
-	owner, err := get_owner(stub, owner_id)
+	owner, err := get_user(stub, owner_id)
 	if err != nil {
 		return shim.Error("This owner does not exist - " + owner_id)
 	}
@@ -354,3 +213,159 @@ func disable_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	fmt.Println("- end disable_owner")
 	return shim.Success(nil)
 }
+
+//新建一个申请()
+//       0     ,                       1       2
+//  marble id（此次申请的ID）  ,       color    Balance
+// "m999999999",                    "read",
+
+//      0      ,    1  ,  2  ,           3          ,      4     ,
+//     id      ,  contract, balance,     owner id    ,     authorizing_company,
+// "m999999999", "blue", "35", "o9999999999999",        "inter",
+func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
+	fmt.Println("starting init_marble")
+
+	if len(args) != 5 {
+		return shim.Error("Incorrect number of arguments. Expecting 5")
+	}
+
+	//input sanitation
+	err = sanitize_arguments(args)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	id := args[0]
+	contact := strings.ToLower(args[1])
+	user_id := args[3]
+	authed_by_company := args[4]
+	balance, err := strconv.Atoi(args[2])
+	if err != nil {
+		return shim.Error("3rd argument must be a numeric string")
+	}
+
+	//check if new user exists
+	user, err := get_user(stub, user_id)
+	if err != nil {
+		fmt.Println("Failed to find user - " + user_id)
+		return shim.Error(err.Error())
+	}
+
+	//check authorizing company (see note in set_user() about how this is quirky)
+	if user.Company != authed_by_company{
+		return shim.Error("The company '" + authed_by_company + "' cannot authorize creation for '" + user.Company + "'.")
+	}
+
+	//check if marble id already exists
+	marble, err := get_marble(stub, id)
+	if err == nil {
+		fmt.Println("This marble already exists - " + id)
+		fmt.Println(marble)
+		return shim.Error("This marble already exists - " + id)  //all stop a marble by this id exists
+	}
+
+	str := `{
+		"docType":"marble", 
+		"id": "` + id + `", 
+		"contact": "` + contact + `", 
+		"balance": ` + strconv.Itoa(balance) + `, 
+		"user": {
+			"id": "` + user_id + `", 
+			"username": "` + user.Username + `", 
+			"company": "` + user.Company + `"
+		},
+		"check":{
+			{"id":"` + id + `","name":"` + user.Username + `","review":"2"},
+			{"id":"` + id + `","name":"` + user.Username + `","review":"1"},
+			{"id":"","name":"","review":"0"},
+			{"id":"","name":"","review":"0"},
+			{"id":"","name":"","review":"0"},
+			{"id":"","name":"","review":"0"},
+			{"id":"","name":"","review":"0"},
+			{"id":"","name":"","review":"0"},
+		},
+		"where":"`+ user_id +`"
+	}`
+	err = stub.PutState(id, []byte(str))                         //store marble with id as key
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	fmt.Println("- end init_marble")
+	return shim.Success(nil)
+}
+
+//  操作:如果通过提交到下一环节进行复审，如果不通过则返回上一环节
+//      0                1    ,    2        ，    3      ，     4               5
+//    marbleId          id        name      ，   是否通过   ，    next
+//  "09999999999"     "UserId"，"UserName"  ，  “2or3”   ，   下一步UserId    执行阶段
+//
+func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response{
+	var err error
+	fmt.Println("starting submit_marble")
+	if len(args) != 6 {
+		return shim.Error("Incorrect number of arguments. Expecting 5")
+	}
+
+	//input sanitation
+	err = sanitize_arguments(args)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	marbleId := args[0]
+	id := args[1]
+	name := args[2]
+	next := args[4]
+	step,err := strconv.Atoi(args[5])
+	state,err :=strconv.Atoi(args[3])
+	if err != nil || step > stepNum || step < 0{
+		fmt.Println("当前步骤无效")
+	}
+	marble:= getMarblesById(stub,marbleId)
+//	user :=  getUserById(stub,id)
+
+	if marble.Check[step].Id != id{
+		fmt.Println("当前用户不可审核这次交易，userName： " + name)
+	}
+	//判断交易是否已经被决绝过，防止重复提交
+	if marble.Check[0].Review == Disable{
+		fmt.Println("本次申请己经提交过，请勿重复提交")
+	}
+
+	if marble.Check[step].Review != Wait{
+		fmt.Println("本次交易 未处于等待处理状态 :",marble.Check[step].Review)
+	}
+	if state == Success{  //成功
+		//marble.Check[step].Id = id
+		marble.Check[step].Name = name
+		marble.Check[step].Review = Success
+		if next != ""{
+			marble.Check[step+1].Id = next
+		}else{
+			marble.Check[step+1].Id = id
+		}
+		marble.Check[step+1].Review = Success
+
+	}else if state == Failure{  //失败
+		//marble.Check[step].Id = id
+		marble.Check[step].Name = name
+		marble.Check[step].Review = Failure
+		marble.Check[EndOf].Review = Failure
+		marble.Check[EndOf].Id = id
+		marble.Check[EndOf].Name = name
+	}else {
+		return shim.Error("")
+	}
+
+	jsonAsBytes, _ := json.Marshal(marble)         //convert to array of bytes
+	err = stub.PutState(marbleId, jsonAsBytes)     //rewrite the owner
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
+}
+
+
