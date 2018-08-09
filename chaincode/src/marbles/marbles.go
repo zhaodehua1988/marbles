@@ -40,6 +40,7 @@ const (
 	CompanyCheck   //核心企业审核
 	BankCheck      //银行审核
 	SuppRecv       //供应商收款
+	CompanyRePayMent //核心企业还款
 	SuppRepayment  //供应商还款
 	BankRecv       //银行确认收款
 	EndOf            //包括成功和失败两种情况
@@ -82,11 +83,11 @@ type UserRelation struct {
 }
 
 type CheckInfo struct{
-	UserID  string `json:"userid"`   //id
-	Name    string `json:"name"`     //name
-	Date    string `json:"date"`     //操作的日期
-	Review  int    `json："review"`         //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
-	Comment string `json:"comment"`         //备注
+	UserID  string `json:"userid"`    //id
+	Name    string `json:"name"`      //name
+	Date    string `json:"date"`      //操作的日期
+	Review  int    `json:"review"`    //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
+	Comment string `json:"comment"`   //备注
 }
 
 // ============================================================================================================================
