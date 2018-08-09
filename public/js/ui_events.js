@@ -161,10 +161,11 @@ $(document).on('ready', function () {
 		$('#createPanel').fadeIn();
 		// var company = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('company');
 		// var username = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('username');
-		// var owner_id = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('owner_id');
+		var owner_id = $(this).parents('.legend').parents('.marblesWrap').attr('owner_id');
+		var company = $(this).parents('.legend').parents('.marblesWrap').attr('company');
 		// $('select[name="user"]').html('<option value="' + username + '">' + toTitleCase(username) + '</option>');
-		// $('input[name="company"]').val(company);
-		// $('input[name="owner_id"]').val(owner_id);
+		$('input[name="company"]').val(company);
+		 $('input[name="owner_id"]').val(owner_id);
 	});
 
 	//close create marble panel
@@ -218,13 +219,13 @@ $(document).on('ready', function () {
 	});
 
 	//right click opens audit on marble
-	$(document).on('contextmenu', '.ball', function () {
+	$(document).on('contextmenu', '.item', function () {
 		auditMarble(this, true);
 		return false;
 	});
 
 	//left click audits marble
-	$(document).on('click', '.ball', function () {
+	$(document).on('click', '.item', function () {
 		auditMarble(this, false);
 	});
 

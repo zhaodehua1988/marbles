@@ -77,9 +77,8 @@ module.exports = function (cp, fcw, logger) {
 				title: data.title,
 				balance: data.balance,
 				marble_owner: data.username,
-				owners_company: data.company,
-				owner_id: data.username,
-				auth_company: process.env.marble_company,
+				owner_id: data.owner_id,
+				auth_company: data.company,
 			};
 
 			marbles_lib.create_a_marble(options, function (err, resp) {
@@ -323,6 +322,7 @@ module.exports = function (cp, fcw, logger) {
 	function organize_marbles(allMarbles) {
 		var ret = {};
 		for (var i in allMarbles) {
+			allMarbles[i].owner=allMarbles[i].user;
 			if (!ret[allMarbles[i].owner.username]) {
 				ret[allMarbles[i].owner.username] = {
 					owner_id: allMarbles[i].owner.id,

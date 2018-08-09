@@ -32,7 +32,8 @@ function build_marble(marble) {
 
 	// html += '<span id="' + marble.id + '" class="ball ' + size + ' ' + colorClass + ' ' + auditing + ' title="' + marble.id + '"';
 	// html += ' username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '"></span>';
-	html += '<tr class="item"><td>'+marble.id+'</td><td>'+size+'</td><td>'+colorClass+'</td><td>'+marble.owner.company+'</td><td>'+marble.owner.id+'</td></tr>';
+	html += '<tr id="' + marble.id + '" class="item" title="' + marble.id + '" username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '">';
+	html += '<td>'+marble.id+'</td><td>'+size+'</td><td>'+colorClass+'</td><td>'+marble.owner.company+'</td><td>'+marble.owner.id+'</td></tr>';
 
 	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.innerMarbleContainer').prepend(html);
 	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.noMarblesMsg').hide();
@@ -46,7 +47,6 @@ function populate_users_marbles(msg) {
 	console.log('[ui] clearing marbles for user ' + msg.owner_id);
 	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.innerMarbleWrap').html(
 	`
-		<div class="innerMarbleWrap">
 			<table>
 				<th>
 					<td>id</td>
@@ -58,9 +58,6 @@ function populate_users_marbles(msg) {
 			</table>
 			<table class="innerMarbleContainer">
 			</table>
-			<i class="fa fa-plus addMarble"></i>
-		</div>
-		<i class="fa fa-plus addMarble"></i>
 	`);
 	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.noMarblesMsg').show();
 
