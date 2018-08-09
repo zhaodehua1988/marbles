@@ -156,15 +156,15 @@ $(document).on('ready', function () {
 	});
 
 	//open create marble panel
-	$(document).on('click', '.addMarble', function () {
+	$(document).on('click', '.addMarbleButtion', function () {
 		$('#tint').fadeIn();
 		$('#createPanel').fadeIn();
-		var company = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('company');
-		var username = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('username');
-		var owner_id = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('owner_id');
-		$('select[name="user"]').html('<option value="' + username + '">' + toTitleCase(username) + '</option>');
-		$('input[name="company"]').val(company);
-		$('input[name="owner_id"]').val(owner_id);
+		// var company = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('company');
+		// var username = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('username');
+		// var owner_id = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('owner_id');
+		// $('select[name="user"]').html('<option value="' + username + '">' + toTitleCase(username) + '</option>');
+		// $('input[name="company"]').val(company);
+		// $('input[name="owner_id"]').val(owner_id);
 	});
 
 	//close create marble panel

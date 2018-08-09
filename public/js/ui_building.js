@@ -110,9 +110,12 @@ function build_user_panels(data) {
 		html += `<div id="user` + i + `wrap" username="` + data[i].username + `" company="` + data[i].company +
 			`" owner_id="` + data[i].id + `" class="marblesWrap ` + colorClass + `">
 					<div class="legend" style="` + size_user_name(data[i].username) + `">
-						` + toTitleCase(data[i].username) + `
-						<span class="fa fa-thumb-tack marblesFix" title="Never Hide Owner"></span>
-						` + disableHtml + `
+						` + toTitleCase(data[i].username) + 
+						// `
+						// <span class="fa fa-thumb-tack marblesFix" title="Never Hide Owner"></span>
+						// ` + disableHtml + 
+						`
+						<i class="fa fa-plus addMarbleButtion marblesFix"></i>
 					</div>
 					<div class="innerMarbleWrap">
 						<table>
@@ -126,9 +129,8 @@ function build_user_panels(data) {
 						</table>
 						<table class="innerMarbleContainer">
 						</table>
-						<i class="fa fa-plus addMarble"></i>
 					</div>
-					<div class="noMarblesMsg hint">lost all marbles</div>
+					<div class="noMarblesMsg hint">you have no workflow in progress</div>
 				</div>`;
 
 		$('.companyPanel[company="' + data[i].company + '"]').find('.ownerWrap').append(html);

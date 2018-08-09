@@ -211,25 +211,29 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 		}
 	};
 
-
+	var created = 0;
 	// Create marbles and marble owners, owners first
 	startup_lib.create_assets = function (build_marbles_users) {
-		build_marbles_users = misc.saferNames(build_marbles_users);
+		if (created!=0){
+			return;
+		}
+		build_marbles_users = cp.getAllEnrollObj();
 		logger.info('Creating marble owners and marbles');
 		var owners = [];
 
 		if (build_marbles_users && build_marbles_users.length > 0) {
-			async.each(build_marbles_users, function (username, owner_cb) {
-				logger.debug('- creating marble owner: ', username);
+			async.each(build_marbles_users, function (company, owner_cb) {
+				logger.debug('- creating default user of : ', company);
 
 				// --- Create Each User --- //
-				startup_lib.create_owners(0, username, function (errCode, resp) {
-					owners.push({ id: resp.id, username: username });
+				startup_lib.create_owners(0, company, function (errCode, resp) {
+					owners.push({ id: resp.id, company: company });
 					owner_cb();
+					created = 1;
 				});
 
 			}, function (err) {
-				logger.info('finished creating owners, now for marbles');
+				logger.info('finished creating default user, now for marbles');
 				if (err == null) {
 
 					var marbles = [];
@@ -242,16 +246,17 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 					logger.debug('prepared marbles obj', marbles.length, marbles);
 
 					// --- Create Marbles--- unused//
-					// setTimeout(function () {
-					// 	async.each(marbles, function (owner_obj, marble_cb) { 			//iter through each one
-					// 		startup_lib.create_marbles(owner_obj.id, owner_obj.username, marble_cb);
-					// 	}, function (err) {												//marble owner creation finished
-					// 		logger.debug('- finished creating asset');
-					// 		if (err == null) {
-					// 			startup_lib.all_done();												//delay for peer catch up
-					// 		}
-					// 	});
-					// }, cp.getBlockDelay());
+					setTimeout(function () {
+						async.each(marbles, function (owner_obj, marble_cb) { 			//iter through each one
+							// startup_lib.create_marbles(owner_obj.id, owner_obj.username, marble_cb);
+							return marble_cb();
+						}, function (err) {												//marble owner creation finished
+							logger.debug('- finished creating asset');
+							if (err == null) {
+								startup_lib.all_done();												//delay for peer catch up
+							}
+						});
+					}, cp.getBlockDelay());
 				}
 			});
 		}
@@ -262,14 +267,14 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 	};
 
 	// Create the marble owner
-	startup_lib.create_owners = function (attempt, username, cb) {
+	startup_lib.create_owners = function (attempt, company, cb) {
 		const channel = cp.getChannelId();
 		const first_peer = cp.getFirstPeerName(channel);
 		var options = {
 			peer_urls: [cp.getPeersUrl(first_peer)],
 			args: {
-				marble_owner: username,
-				owners_company: process.env.marble_company
+				marble_owner: 'Default',
+				owners_company: company
 			}
 		};
 		marbles_lib.register_owner(options, function (e, resp) {
