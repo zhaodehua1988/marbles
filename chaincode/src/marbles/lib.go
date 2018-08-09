@@ -83,17 +83,18 @@ func sanitize_arguments(strs []string) error{
 
 
 
-func getMarblesById(stub shim.ChaincodeStubInterface,id string)( marble Marble){
+func getMarblesById(stub shim.ChaincodeStubInterface,id string)( marble Marble,err error){
 
-	var err error
+
 	fmt.Println("starting read")
 	valAsbytes, err := stub.GetState(id)           //get the var from ledger
 	if err != nil {
 		fmt.Sprintf("{\"Error\":\"Failed to get state for " + id + "\"}")
+		return marble,err
 	}
-
+	fmt.Println("get marble id"+id)
 	json.Unmarshal(valAsbytes, &marble)
-	return marble
+	return marble,nil
 }
 func getAllMarbles(stub shim.ChaincodeStubInterface)(marbles []Marble,err error){
 

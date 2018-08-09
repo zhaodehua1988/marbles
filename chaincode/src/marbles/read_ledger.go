@@ -377,7 +377,7 @@ const(
 //
 func  read_allstate(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	if len(args) != 1 {
+	if len(args) != 3 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
 	}
 	userID := args[0]
