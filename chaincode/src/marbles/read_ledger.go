@@ -141,26 +141,6 @@ func read_everything(stub shim.ChaincodeStubInterface,args []string) pb.Response
 		// ---- Get All Marbles ---- //
 
 		everything.Marbles,_= getAllMarbles(stub)
-	/*	resultsIterator, err := stub.GetStateByRange("m0", "m9999999999999999999")
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		defer resultsIterator.Close()
-
-		for resultsIterator.HasNext() {
-			aKeyValue, err := resultsIterator.Next()
-			if err != nil {
-				return shim.Error(err.Error())
-			}
-			queryKeyAsStr := aKeyValue.Key
-			queryValAsBytes := aKeyValue.Value
-			fmt.Println("on marble id - ", queryKeyAsStr)
-			var marble Marble
-			json.Unmarshal(queryValAsBytes, &marble)                  //un stringify it aka JSON.parse()
-			everything.Marbles = append(everything.Marbles, marble)   //add this marble to the list
-		}
-		fmt.Println("marble array - ", everything.Marbles)
-	*/
 	}
 
 	// ---- Get All Owners ---- //

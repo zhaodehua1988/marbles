@@ -35,14 +35,14 @@ const (
 )
 //申请所处的各个阶段
 const (
-	New = iota     //供应商新建marble并提交申请   0
-	CompanyCheck   //核心企业审核  1
-	BankCheck      //银行审核     2
-	SuppRecv       //供应商收款   3
-	CompanyRePayMent //核心企业还款  4
-	SuppRepayment  //供应商还款      5
-	BankRecv       //银行确认收款    6
-	EndOf            //包括成功和失败两种情况 7
+	New = iota        //供应商新建marble并提交申请   0
+	CompanyCheck      //核心企业审核                1
+	BankCheck         //银行审核                    2
+	SuppRecv          //供应商收款                  3
+	CompanyRePayMent  //核心企业还款                4
+	SuppRepayment     //供应商还款                  5
+	BankRecv          //银行确认收款                6
+	EndOf             //包括成功和失败两种情况        7
 )
 //确认阶段
 const(
@@ -90,7 +90,7 @@ type UserRelation struct {
 
 type CheckInfo struct{
 	UserID  string `json:"userid"`    //id
-	Company    string `json:"company"`      //name
+	Company    string `json:"company"` //name
 	Date    string `json:"date"`      //操作的日期
 	Review  int    `json:"review"`    //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
 	Comment string `json:"comment"`   //备注
