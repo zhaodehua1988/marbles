@@ -58,7 +58,7 @@ const(
 //{                    "enrollId": "bank",                    "enrollSecret": "bankpw"                },
 //{                    "enrollId": "auditor",                    "enrollSecret": "auditor"                }
 //                                     0         1          2               3      4            5               6        7
-var Step_company  =[StepNum]string {"auditor","auditor","core-enterprise","bank","auditor","core-enterprise","auditor","bank"}
+var Step_company  =[StepNum]string {"supplier","supplier","core-enterprise","bank","supplier","core-enterprise","supplier","bank"}
 // ============================================================================================================================
 // Asset Definitions - The ledger will store marbles and owners
 // ============================================================================================================================
