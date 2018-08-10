@@ -63,7 +63,7 @@ $(document).on('ready', function () {
 			id: $('input[name="id"]').val(),
 			action: $('input[name="action"]').val(),
 			comment: $('input[name="comment"]').val(),
-			userid: $('input[name="owner_id"]').val(),
+			userid: Cookies.get('username'),
 			v: 1
 		};
 		console.log('updating marble, sending', obj);
