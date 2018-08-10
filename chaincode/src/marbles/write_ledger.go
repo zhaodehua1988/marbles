@@ -411,8 +411,8 @@ func  tx_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 //  "09999999999"    "011111"    ， "2/3(success/failure)"        "comment"
 //
 func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response{
-	args[1]=getUserByCompany(stub,args[1]).Id;
-	var err error
+	userC,_:= getUserByCompany(stub,args[1])
+	args[1]=userC.Id
 	fmt.Println("starting submit_marble")
 	if len(args) != 4 {
 		return shim.Error("Incorrect number of arguments. Expecting 5")
