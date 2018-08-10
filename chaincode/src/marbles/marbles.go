@@ -31,19 +31,18 @@ type SimpleChaincode struct {
 }
 
 const (
-	StepNum = 9
+	StepNum = 8
 )
 //申请所处的各个阶段
 const (
-	New = iota     //0
-	SuppApply      //供应商申请  supplier apply  1
-	CompanyCheck   //核心企业审核  2
-	BankCheck      //银行审核     3
-	SuppRecv       //供应商收款   4
-	CompanyRePayMent //核心企业还款   5
-	SuppRepayment  //供应商还款       6
-	BankRecv       //银行确认收款     7
-	EndOf            //包括成功和失败两种情况 8
+	New = iota     //供应商新建marble并提交申请   0
+	CompanyCheck   //核心企业审核  1
+	BankCheck      //银行审核     2
+	SuppRecv       //供应商收款   3
+	CompanyRePayMent //核心企业还款  4
+	SuppRepayment  //供应商还款      5
+	BankRecv       //银行确认收款    6
+	EndOf            //包括成功和失败两种情况 7
 )
 //确认阶段
 const(
@@ -57,8 +56,8 @@ const(
 //{                    "enrollId": "core-enterprise",                    "enrollSecret": "cepw"                },
 //{                    "enrollId": "bank",                    "enrollSecret": "bankpw"                },
 //{                    "enrollId": "auditor",                    "enrollSecret": "auditor"                }
-//                                     0         1          2               3      4            5               6        7
-var Step_company  =[StepNum]string {"supplier","supplier","core-enterprise","bank","supplier","core-enterprise","supplier","bank"}
+//                                     0                 1          2       3              4            5          6      7
+var Step_company  =[StepNum]string {"supplier","core-enterprise","bank","supplier","core-enterprise","supplier","bank","bank"}
 // ============================================================================================================================
 // Asset Definitions - The ledger will store marbles and owners
 // ============================================================================================================================
@@ -198,7 +197,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}else if function == "init_owner"{        //create a new marble owner
 		return init_owner(stub, args)
 	} else if function == "read_everything"{   //read everything, (owners + marbles + companies)
-		return read_everything(stub)
+		return read_everything(stub,args)
 	} else if function == "getHistory"{        //read history of a marble (audit)
 		return getHistory(stub, args)
 	} else if function == "getMarblesByRange"{ //read a bunch of marbles by start and stop id

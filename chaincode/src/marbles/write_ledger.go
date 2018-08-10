@@ -267,7 +267,7 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	var marble Marble
-
+	companyUser,_:=getUserByCompany(stub,Step_company[CompanyCheck])
 	marble.ObjectType = "marble"
 	marble.Id = id
 	marble.Contact = contact
@@ -281,11 +281,10 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	marble.Check[New].Review=Success
 	marble.Check[New].Date = time.Now().Format("2006-01-02 15:04:05")
 	marble.Check[New].Comment = "new marbles"
-	marble.Check[SuppApply].UserID = user_id
-	marble.Check[SuppApply].Company   = user.Company
-	marble.Check[SuppApply].Review = Success
-	marble.Check[SuppApply].Comment = "new marbles"
-	marble.Check[SuppApply].Date = time.Now().Format("2006-01-02 15:04:05")
+	marble.Check[CompanyCheck].UserID = companyUser.Id
+	marble.Check[CompanyCheck].Company = Step_company[CompanyCheck]
+	marble.Check[CompanyCheck].Review = Wait
+	marble.Check[CompanyCheck].Comment = ""
 	for i:=2;i< StepNum;i++{
 		marble.Check[i].UserID=""
 		marble.Check[i].Company   = ""
@@ -501,10 +500,7 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 		marble.Check[step].Review = Success
 		marble.Check[step].Date = time.Now().Format("2006-01-02 15:04:05")
 		marble.Check[step].Comment = commont
-		if next.Id != ""{
-			marble.Check[step+1].UserID = next.Id
-		}
-
+		marble.Check[step+1].UserID = next.Id
 		marble.Check[step+1].Review = Wait
 		if step == BankRecv{ //如果是银行确认收款成功，设置最后结束的状态
 			marble.Check[EndOf].Review = Success
@@ -512,7 +508,6 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 			marble.Check[EndOf].Comment = "the marble is end success !"
 			marble.Check[EndOf].Company = user.Company
 		}
-
 
 	}else if state == Failure{  //失败
 		//marble.Check[step].UserID = userID
