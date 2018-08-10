@@ -155,8 +155,9 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 		return shim.Error("This user already exists - " + user.Id)
 	}
 
-	if _,err:= getUserByCompany(stub,user.Company);err == nil{
-		return shim.Error("can not add new user of this company")
+	 companyUser,err:= getUserByCompany(stub,user.Company)
+	if companyUser.Company != ""{
+		return shim.Error("can not add new user of this company ,user is exist")
 	}
 	//store user
 	ownerAsBytes, _ := json.Marshal(user)      //convert to array of bytes
@@ -486,7 +487,6 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 			marble.Check[EndOf].Review = Success
 			marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
 			marble.Check[EndOf].Comment = "the transaction is end success !"
-			marble.Check[EndOf].Company = user.Company
 		}
 
 	}else if state == Failure{  //失败
