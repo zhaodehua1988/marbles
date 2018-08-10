@@ -226,7 +226,7 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	fmt.Println("starting init_marble")
 
 	if len(args) != 6 {
-		return shim.Error("Incorrect number of arguments. Expecting 5")
+		return shim.Error("Incorrect number of arguments. Expecting 6")
 	}
 
 	//input sanitation
@@ -267,7 +267,9 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	var marble Marble
-	companyUser,_:=getUserByCompany(stub,Step_company[CompanyCheck])
+	companyUser,err:=getUserByCompany(stub,Step_company[CompanyCheck]);if err !=nil{
+		return shim.Error("there is no  core-enterprise ,can't create a transaction")
+	}
 	marble.ObjectType = "marble"
 	marble.Id = id
 	marble.Contact = contact
@@ -280,7 +282,7 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	marble.Check[New].Company = user.Company
 	marble.Check[New].Review=Success
 	marble.Check[New].Date = time.Now().Format("2006-01-02 15:04:05")
-	marble.Check[New].Comment = "new marbles"
+	marble.Check[New].Comment = "new  transaction"
 	marble.Check[CompanyCheck].UserID = companyUser.Id
 	marble.Check[CompanyCheck].Company = Step_company[CompanyCheck]
 	marble.Check[CompanyCheck].Review = Wait
@@ -291,35 +293,7 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 		marble.Check[i].Review = Disable
 		marble.Check[i].Comment = ""
 	}
-/*
-	str := `{
-		"docType":"marble", 
-		"id": "` + id + `", 
-		"contact": "` + contact + `", 
-		"balance": "` + strconv.Itoa(balance) + `", 
-		"title"  : "`+title+`"
-		"user": {
-			"id": "` + user_id + `", 
-			"username": "` + user.Username + `", 
-			"company": "` + user.Company + `"
-		},
-		"check":{
-			{"id":"` + id + `","name":"` + user.Username + `","review":"2"},
-			{"id":"` + id + `","name":"` + user.Username + `","review":"1"},
-			{"id":"","name":"","review":"0"},
-			{"id":"","name":"","review":"0"},
-			{"id":"","name":"","review":"0"},
-			{"id":"","name":"","review":"0"},
-			{"id":"","name":"","review":"0"},
-			{"id":"","name":"","review":"0"},
-		},
-		"where":"`+ user_id +`"
-	}`
-	err = stub.PutState(id, []byte(str))                         //store marble with id as key
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-*/
+
 	jsonAsBytes, _ := json.Marshal(marble)         //convert to array of bytes
 	//fmt.Println(jsonAsBytes)
 	err = stub.PutState(id, jsonAsBytes)     //rewrite the owner
@@ -401,7 +375,7 @@ func  tx_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 		if step == BankRecv{ //如果是银行确认收款成功，设置最后结束的状态
 			marble.Check[EndOf].Review = Success
 			marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
-			marble.Check[EndOf].Comment = "the marbles is end success"
+			marble.Check[EndOf].Comment = "the transaction is end success"
 			marble.Check[EndOf].Company = user.Company
 		}
 
@@ -411,13 +385,14 @@ func  tx_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response{
 		marble.Check[step].Company = user.Company
 		marble.Check[step].Review = Failure
 		marble.Check[step].Date = time.Now().Format("2006-01-02 15:04:05")
+		marble.Check[step].Comment = commont
 		marble.Check[EndOf].Review = Failure
 		marble.Check[EndOf].UserID = userID
 		marble.Check[EndOf].Company = user.Company
-		marble.Check[EndOf].Comment=commont
+		marble.Check[EndOf].Comment="the transaction is end failure"
 		marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
 	}else {
-		return shim.Error("the marbles state is wrong")
+		return shim.Error("the transaction state is wrong")
 	}
 
 	jsonAsBytes, _ := json.Marshal(marble)         //convert to array of bytes
@@ -443,10 +418,10 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 	}
 
 	//input sanitation
-	err = sanitize_arguments(args)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
+	//err = sanitize_arguments(args)
+	//if err != nil {
+	//	return shim.Error(err.Error())
+	//}
 
 	marbleId := args[0]
 	userID := args[1]
@@ -505,7 +480,7 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 		if step == BankRecv{ //如果是银行确认收款成功，设置最后结束的状态
 			marble.Check[EndOf].Review = Success
 			marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
-			marble.Check[EndOf].Comment = "the marble is end success !"
+			marble.Check[EndOf].Comment = "the transaction is end success !"
 			marble.Check[EndOf].Company = user.Company
 		}
 
@@ -514,10 +489,11 @@ func  review_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response
 		marble.Check[step].Company = user.Company
 		marble.Check[step].Review = Failure
 		marble.Check[step].Date = time.Now().Format("2006-01-02 15:04:05")
+		marble.Check[step].Comment = commont
 		marble.Check[EndOf].Review = Failure
 		marble.Check[EndOf].UserID = userID
 		marble.Check[EndOf].Company = user.Company
-		marble.Check[EndOf].Comment="the marble is end failure "
+		marble.Check[EndOf].Comment="the transaction is end failure !"
 		marble.Check[EndOf].Date = time.Now().Format("2006-01-02 15:04:05")
 	}else {
 		return shim.Error("the marbles state is wrong")
