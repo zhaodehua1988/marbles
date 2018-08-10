@@ -283,8 +283,9 @@ func init_marble(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	marble.Check[New].Comment = "new marbles"
 	marble.Check[SuppApply].UserID = user_id
 	marble.Check[SuppApply].Company   = user.Company
-	marble.Check[SuppApply].Review = Wait
-	marble.Check[SuppApply].Comment = ""
+	marble.Check[SuppApply].Review = Success
+	marble.Check[SuppApply].Comment = "new marbles"
+	marble.Check[SuppApply].Date = time.Now().Format("2006-01-02 15:04:05")
 	for i:=2;i< StepNum;i++{
 		marble.Check[i].UserID=""
 		marble.Check[i].Company   = ""
