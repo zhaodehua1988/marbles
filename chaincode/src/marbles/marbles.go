@@ -36,14 +36,14 @@ const (
 //申请所处的各个阶段
 const (
 	New = iota     //0
-	SuppApply      //供应商申请  supplier apply
-	CompanyCheck   //核心企业审核
-	BankCheck      //银行审核
-	SuppRecv       //供应商收款
-	CompanyRePayMent //核心企业还款
-	SuppRepayment  //供应商还款
-	BankRecv       //银行确认收款
-	EndOf            //包括成功和失败两种情况
+	SuppApply      //供应商申请  supplier apply  1
+	CompanyCheck   //核心企业审核  2
+	BankCheck      //银行审核     3
+	SuppRecv       //供应商收款   4
+	CompanyRePayMent //核心企业还款   5
+	SuppRepayment  //供应商还款       6
+	BankRecv       //银行确认收款     7
+	EndOf            //包括成功和失败两种情况 8
 )
 //确认阶段
 const(
@@ -52,6 +52,13 @@ const(
 	Success
 	Failure
 )
+//var Step_Company[StepNum]string
+
+//{                    "enrollId": "core-enterprise",                    "enrollSecret": "cepw"                },
+//{                    "enrollId": "bank",                    "enrollSecret": "bankpw"                },
+//{                    "enrollId": "auditor",                    "enrollSecret": "auditor"                }
+//                                     0         1          2               3      4            5               6        7
+var Step_company  =[StepNum]string {"auditor","auditor","core-enterprise","bank","auditor","core-enterprise","auditor","bank"}
 // ============================================================================================================================
 // Asset Definitions - The ledger will store marbles and owners
 // ============================================================================================================================
@@ -84,7 +91,7 @@ type UserRelation struct {
 
 type CheckInfo struct{
 	UserID  string `json:"userid"`    //id
-	Name    string `json:"name"`      //name
+	Company    string `json:"company"`      //name
 	Date    string `json:"date"`      //操作的日期
 	Review  int    `json:"review"`    //确认阶段{ 0:不需要确认 1:待确认 2:成功 3:失败 }
 	Comment string `json:"comment"`   //备注
@@ -201,10 +208,13 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if function == "review_marble"{
 		return review_marble(stub,args)        //对marble的审核，或者放款，还款等操作
 	}else if function == "read_allmarble"{
-		return read_allmarble(stub,args)      //
-	}else if function == "read_allstate"{
+		return read_allmarble(stub,args)       //通过userID查询所有的相关的marble
+	}else if function == "read_allstate"{      //
 		return read_allstate(stub,args)
+	}else if function == "tx_marble"{
+		return tx_marble(stub,args)
 	}
+
 	// error out
 	fmt.Println("Received unknown invoke function name - " + function)
 	return shim.Error("Received unknown invoke function name - '" + function + "'")
