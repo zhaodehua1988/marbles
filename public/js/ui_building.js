@@ -213,7 +213,10 @@ function build_user_panels(data) {
 		if (data[i].company  === escapeHtml(bag.marble_company)) {
 			disableHtml = '<span class="fa fa-trash disableOwner" title="Disable Owner"></span>';
 		}
-
+		let addhtml = '';
+		if (Cookies.get('username')==='supplier' &&data[i].company==='supplier' ){
+			addhtml = `<i class="fa fa-plus addMarbleButtion marblesFix"></i>`;
+		}
 		html += `<div id="user` + i + `wrap" username="` + data[i].username + `" company="` + data[i].company +
 			`" owner_id="` + data[i].id + `" class="marblesWrap ` + colorClass + `">
 					<div class="legend" style="` + size_user_name(data[i].username) + `">Loan Workflow
@@ -221,8 +224,9 @@ function build_user_panels(data) {
 						// `
 						// <span class="fa fa-thumb-tack marblesFix" title="Never Hide Owner"></span>
 						// ` + disableHtml + 
+						addhtml+
 						`
-						<i class="fa fa-plus addMarbleButtion marblesFix"></i>
+						
 					</div>
 					<div class="innerMarbleWrap">
 						<table class="innerMarbleContainer">
