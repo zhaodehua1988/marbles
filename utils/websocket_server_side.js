@@ -87,6 +87,22 @@ module.exports = function (cp, fcw, logger) {
 			});
 		}
 
+		// update a  marble
+		if (data.type === 'update') {
+			logger.info('[ws] update marbles req');
+			options.args = {
+				id: data.id,
+				action: data.action,
+				comment: data.comment,
+				userid: data.userid
+			};
+
+			marbles_lib.update_marble(options, function (err, resp) {
+				if (err != null) send_err(err, data);
+				else options.ws.send(JSON.stringify({ msg: 'tx_step', state: 'finished' }));
+			});
+		}
+
 		// transfer a marble
 		else if (data.type === 'transfer_marble') {
 			logger.info('[ws] transferring req');
@@ -119,7 +135,7 @@ module.exports = function (cp, fcw, logger) {
 		// get all owners, marbles, & companies
 		else if (data.type === 'read_everything') {
 			logger.info('[ws] read everything req');
-			ws_server.check_for_updates(ws);
+			ws_server.check_for_updates(ws,{username:data.username});
 		}
 
 		// get history of marble
@@ -183,17 +199,17 @@ module.exports = function (cp, fcw, logger) {
 	};
 
 	// sch next periodic check
-	function sch_next_check() {
+	function sch_next_check(args) {
 		clearTimeout(checkPeriodically);
 		checkPeriodically = setTimeout(function () {
 			try {
-				ws_server.check_for_updates(null);
+				ws_server.check_for_updates(null,args);
 			}
 			catch (e) {
 				console.log('');
 				logger.error('Error in sch next check\n\n', e);
-				sch_next_check();
-				ws_server.check_for_updates(null);
+				sch_next_check(args);
+				ws_server.check_for_updates(null,args);
 			}
 		}, cp.getBlockDelay() + 2000);
 	}
@@ -201,7 +217,7 @@ module.exports = function (cp, fcw, logger) {
 	// --------------------------------------------------------
 	// Check for Updates to Ledger
 	// --------------------------------------------------------
-	ws_server.check_for_updates = function (ws_client) {
+	ws_server.check_for_updates = function (ws_client,args) {
 		marbles_lib.channel_stats(null, function (err, resp) {
 			var newBlock = false;
 			if (err != null) {
@@ -236,11 +252,15 @@ module.exports = function (cp, fcw, logger) {
 			}
 
 			if (newBlock || ws_client) {
+				if (!ws_client){
+					ws_client={};
+				}
+				ws_client.username=args.username;
 				read_everything(ws_client, function () {
-					sch_next_check();						//check again
-				});
+					sch_next_check(args);						//check again
+				},args.username);
 			} else {
-				sch_next_check();							//check again
+				sch_next_check(args);							//check again
 			}
 		});
 	};
@@ -251,6 +271,7 @@ module.exports = function (cp, fcw, logger) {
 		const first_peer = cp.getFirstPeerName(channel);
 		var options = {
 			peer_urls: [cp.getPeersUrl(first_peer)],
+			username: ws_client.username
 		};
 
 		marbles_lib.read_everything(options, function (err, resp) {
@@ -261,7 +282,7 @@ module.exports = function (cp, fcw, logger) {
 					msg: 'error',
 					e: err,
 				};
-				if (ws_client) ws_client.send(JSON.stringify(obj)); 								//send to a client
+				if (ws_client && ws_client.send) ws_client.send(JSON.stringify(obj)); 								//send to a client
 				else wss.broadcast(obj);																//send to all clients
 				if (cb) cb();
 			}
@@ -280,7 +301,7 @@ module.exports = function (cp, fcw, logger) {
 
 				if (knownAsString === latestListAsString) {
 					logger.debug('[checking] same everything as last time');
-					if (ws_client !== null) {									//if this is answering a clients req, send to 1 client
+					if (ws_client !== null && ws_client.send) {									//if this is answering a clients req, send to 1 client
 						logger.debug('[checking] sending to 1 client');
 						ws_client.send(JSON.stringify({ msg: 'everything', e: err, everything: data }));
 					}

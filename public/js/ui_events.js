@@ -55,6 +55,43 @@ $(document).on('ready', function () {
 		return false;
 	});
 
+	function submitUpdate(){
+		console.log('creating marble');
+		var un = Cookies.get('username');
+		var obj = {
+			type: 'update',
+			id: $('input[name="id"]').val(),
+			action: $('input[name="action"]').val(),
+			comment: $('input[name="comment"]').val(),
+			userid: $('input[name="owner_id"]').val(),
+			v: 1
+		};
+		console.log('updating marble, sending', obj);
+		$('#updatePanel').fadeOut();
+		$('#tint').fadeOut();
+
+		show_tx_step({ state: 'building_proposal' }, function () {
+			ws.send(JSON.stringify(obj));
+
+			refreshHomePanel();
+			$('.colorValue').html('Color');											//reset
+			for (var i in bgcolors) $('.createball').removeClass(bgcolors[i]);		//reset
+			$('.createball').css('border', '2px dashed #fff');						//reset
+		});
+
+		return false;
+	}
+	
+	$('#confirmButton').click(function(){
+		$('input[name="action"]').val(2);
+		submitUpdate();
+		return false;
+	});
+	$('#rejectButton').click(function(){
+		$('input[name="action"]').val(3);
+		submitUpdate();
+		return false;
+	});
 
 	//fix marble owner panel (don't filter/hide it)
 	$(document).on('click', '.marblesFix', function () {

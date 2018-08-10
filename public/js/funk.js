@@ -111,7 +111,6 @@ function escapeHtml(str) {
 function translateAction(where,operation){
 	var operations = [
 		['','wait','create'],
-		['','wait','initiate'],
 		['','wait','confirm','reject'],
 		['','wait','loan','reject'],
 		['','wait','receive','reject'],
@@ -121,4 +120,17 @@ function translateAction(where,operation){
 		['','wait','successed','failed']
 	];
 	return operations[where][operation];
+}
+
+//var Step_company  =[StepNum]string {"supplier","core-enterprise","bank","supplier","core-enterprise","supplier","bank","bank"}
+function getCompany(marble){
+	var company = [
+		"supplier","core-enterprise","bank","supplier","core-enterprise","supplier","bank","bank"
+	];
+	for (var i in marble.check){
+		if (marble.check[i].review===1){
+			return company[i];
+		}
+	}
+	return '';
 }

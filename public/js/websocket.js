@@ -294,7 +294,8 @@ function closeNoticePanel() {
 function get_everything_or_else(attempt) {
 	console.log(wsTxt + ' sending get everything msg');
 	clearTimeout(getEverythingWatchdog);
-	ws.send(JSON.stringify({ type: 'read_everything', v: 1 }));
+	ws.send(JSON.stringify({ type: 'read_everything', v: 1, username:Cookies.get('username')
+	 }));
 
 	if (!attempt) attempt = 1;
 	else attempt++;

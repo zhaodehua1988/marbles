@@ -34,6 +34,7 @@ $(document).on('ready', function () {
 			caUrl: $('input[name="caUrl"]').val(),
 			enrollId: $('input[name="enrollId"]').val(),
 			enrollSecret: $('input[name="enrollSecret"]').val(),
+			username: Cookies.get('username')
 		};
 		console.log('[startup] sending enrollment msg', obj);
 		ws.send(JSON.stringify(obj));
@@ -48,7 +49,8 @@ $(document).on('ready', function () {
 			peerUrl: $('input[name="peerUrl"]').val(),
 			channelId: $('input[name="channelId"]').val(),
 			chaincodeId: $('input[name="chaincodeId"]').val(),
-			chaincodeVersion: $('input[name="chaincodeVersion"]').val()
+			chaincodeVersion: $('input[name="chaincodeVersion"]').val(),
+			username: Cookies.get('username')
 		};
 		console.log('[startup] sending find_chaincode msg');
 		ws.send(JSON.stringify(obj));
@@ -120,6 +122,7 @@ function build_marble_owners() {
 		type: 'setup',
 		configure: 'register',
 		build_marble_owners: owners,
+		username: Cookies.get('username')
 	};
 	console.log('[startup] sending register msg');
 	ws.send(JSON.stringify(obj));

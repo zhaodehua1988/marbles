@@ -45,6 +45,10 @@ module.exports = function (logger, cp) {
 	// Home
 	// ============================================================================================================================
 	app.get('/home', function (req, res) {
+		if (!req.session.user){
+			res.redirect('/login');
+			return;
+		}
 		route_me(req, res);
 	});
 

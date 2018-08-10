@@ -30,30 +30,64 @@ function build_marble(marble) {
 
 	if (auditingMarble && marble.id === auditingMarble.id) auditing = 'auditingMarble';
 
+	//获取当前等待执行的动作
+	var confirm,reject;
+	for (var i=0;i<marble.check.length;i++){
+		if(!(marble.check[i].date)){
+			confirm = translateAction(i,2);
+			reject = translateAction(i,3);
+			break;
+		}
+	}
+	var loc = getCompany(marble);
 	// html += '<span id="' + marble.id + '" class="ball ' + size + ' ' + colorClass + ' ' + auditing + ' title="' + marble.id + '"';
 	// html += ' username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '"></span>';
-	html += '<tr id="' + marble.id + '" class="item" title="' + marble.id + '" username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '">';
-	html += '<td>'+marble.id+'</td><td>'+size+'</td><td>'+colorClass+'</td><td>'+marble.owner.company+'</td><td>'+marble.owner.id+'</td><td class="updateMarbleButton" onclick="OpenUpdatePanel(this)">deal</td></tr>';
+	html += '<tr id="' + marble.id + '" class="item" loc="' + loc + '" reject="' + reject + '" confirm="' + confirm + '" title="' + marble.title + '" username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '" balance="' + marble.balance + '"  contact="' + marble.contact + '"> ';
+	html += '<td>'+marble.title+'</td><td>'+marble.balance+'</td><td>'+marble.owner.company+'</td><td>'+marble.contact+'</td><td>'+marble.check[0].date+'</td><td class="updateMarbleButton" onclick="OpenUpdatePanel(this)">deal</td></tr>';
 
-	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.innerMarbleContainer').prepend(html);
-	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.noMarblesMsg').hide();
+	$('.marblesWrap[company="' + getCompany(marble) + '"]').first().find('.innerMarbleContainer').append(html);
+	$('.marblesWrap[company="' + getCompany(marble) + '"]').first().find('.noMarblesMsg').hide();
 	return html;
 }
+
 function OpenUpdatePanel(obj) {
 	$('#tint').fadeIn();
 	$('#updatePanel').fadeIn();
-	// var company = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('company');
-	// var username = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('username');
-	// var owner_id = $(this).parents('.item').attr('owner_id');
-	// var company = $(this).parents('.item').attr('company');
+	var title = $(obj).parents('.item').attr('title');
+	var owner_id = $(obj).parents('.item').attr('owner_id');
+	var balance = $(obj).parents('.item').attr('balance');
+	var contact = $(obj).parents('.item').attr('contact');
+	var username = $(obj).parents('.item').attr('username');
+	var company = $(obj).parents('.item').attr('company');
+	var confirm = $(obj).parents('.item').attr('confirm');
+	var reject = $(obj).parents('.item').attr('reject');
+	var loc = $(obj).parents('.item').attr('loc');
 	var id = $(obj).parents('.item').attr('id');
 	// $('select[name="user"]').html('<option value="' + username + '">' + toTitleCase(username) + '</option>');
-	// $('input[name="company"]').val(company);
-	//  $('input[name="owner_id"]').val(owner_id);
+	$('input[name="title"]').val(title);
+	$('input[name="balance"]').val(balance);
+	$('input[name="contact"]').val(contact);
+	$('input[name="username"]').val(username);
+	$('input[name="company"]').val(company);
+	$('#confirmButton').text(confirm);
+	$('#rejectButton').text(reject);
+	$('input[name="owner_id"]').val(owner_id);
+	$('input[name="id"]').val(id);
+	//权限判断
+	if (loc !=Cookies.get('username') ){
+		$('#confirmButton').hide();
+		$('#rejectButton').hide();
+		$('input[name="comment"]').parents('legend').hide();
+	}else{
+		$('#confirmButton').show();
+		$('#rejectButton').show();
+		$('input[name="comment"]').parents('legend').show();
+	}
 	var html = build_a_marble(window.AllMarbles[id]);
-	$('#updateInnerWrap').html(html);
+	$('#updateInnerWrapLeft').html(html);
 	return false;
 }
+
 
 //translate history check status
 // function translateHistory(checkStatus){
@@ -75,37 +109,36 @@ function build_a_marble(data) {
 		id = data.owner.id;
 	}
 	var history = data.check;
-	html += `<div class="">
-				<div class="leftHalf">
-				<h5>Operation logs:</h5>
+	html += `
+				<h4 style="margin-top:20px">Operation logs:</h4>
 				<ul style="display:block;width:90%;">
 			`;
 	for (var i=0;i<data.check.length;i++){
 		if (history[i] && history[i].date){
 			html+=(
 				//userid,name,date,review,comment
-				'<li style="margin-top:10px">'+history[i].name+' '+translateAction(i,history[i].review)+' on '+ formatDate(history[i].date,'Y-M-d')+
+				'<li style="margin-top:10px">'+history[i].company+' '+translateAction(i,history[i].review)+' on '+ formatDate(history[i].date,'Y-M-d')+
 				' with comment: '+history[i].comment+ '</li>'
 			);
 		}
 	}
 	html +=	`	</ul>
-			    </div>
-				<div class="rightHalf">
-					<p>
-						<div class="marbleLegend">Owner: </div>
-						<div class="marbleName">` + username + `</div>
-					</p>
-					<p>
-						<div class="marbleLegend">Company: </div>
-						<div class="marbleName">` + company + `</div>
-					</p>
-					<p>
-						<div class="marbleLegend">Ower Id: </div>
-						<div class="marbleName">` + id + `</div>
-					</p>
-				</div>
-			</div>`;
+			   `;
+			// 	<div class="rightHalf">
+			// 		<p>
+			// 			<div class="marbleLegend">Owner: </div>
+			// 			<div class="marbleName">` + username + `</div>
+			// 		</p>
+			// 		<p>
+			// 			<div class="marbleLegend">Company: </div>
+			// 			<div class="marbleName">` + company + `</div>
+			// 		</p>
+			// 		<p>
+			// 			<div class="marbleLegend">Ower Id: </div>
+			// 			<div class="marbleName">` + id + `</div>
+			// 		</p>
+			// 	</div>
+			// </div>`;
 	return html;
 }
 
@@ -114,22 +147,20 @@ function populate_users_marbles(msg) {
 
 	//reset
 	console.log('[ui] clearing marbles for user ' + msg.owner_id);
-	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.innerMarbleWrap').html(
+	$('.marblesWrap[company="' + getCompany(msg) + '"]').first().find('.innerMarbleWrap').html(
 	`
-			<table>
+			<table class="innerMarbleContainer">
 				<tr>
-					<th>id</th>
 					<th>title</th>
 					<th>balance</th>
+					<th>company</th>
 					<th>contact</th>
 					<th>create date</th>
 					<th>action</th>
 				</tr>
 			</table>
-			<table class="innerMarbleContainer">
-			</table>
 	`);
-	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.noMarblesMsg').show();
+	$('.marblesWrap[company="' + getCompany(msg) + '"]').first().find('.noMarblesMsg').show();
 
 	for (var i in msg.marbles) {
 		build_marble(msg.marbles[i]);
@@ -156,7 +187,16 @@ function build_user_panels(data) {
 		known_companies[x].count = 0;
 		known_companies[x].visible = 0;							//reset visible counts
 	}
-
+	for (var i=0;i<data.length;i++){
+		var u = Cookies.get('username');
+		if (data[i].company===u){
+			var t = data[0];
+			data[0]=data[i];
+			data[i]=t;
+			break;
+		}
+	}
+	i=0;
 	for (var i in data) {
 		var html = '';
 		var colorClass = '';
@@ -176,8 +216,8 @@ function build_user_panels(data) {
 
 		html += `<div id="user` + i + `wrap" username="` + data[i].username + `" company="` + data[i].company +
 			`" owner_id="` + data[i].id + `" class="marblesWrap ` + colorClass + `">
-					<div class="legend" style="` + size_user_name(data[i].username) + `">
-						` + toTitleCase(data[i].username) + 
+					<div class="legend" style="` + size_user_name(data[i].username) + `">Loan Workflow
+						` + //toTitleCase(data[i].username) + 
 						// `
 						// <span class="fa fa-thumb-tack marblesFix" title="Never Hide Owner"></span>
 						// ` + disableHtml + 
@@ -185,17 +225,15 @@ function build_user_panels(data) {
 						<i class="fa fa-plus addMarbleButtion marblesFix"></i>
 					</div>
 					<div class="innerMarbleWrap">
-						<table>
+						<table class="innerMarbleContainer">
 							<tr>
-								<th>id</th>
 								<th>title</th>
 								<th>balance</th>
+								<th>company</th>								
 								<th>contact</th>
 								<th>create date</th>
 								<th>action</th>
 							</tr>
-						</table>
-						<table class="innerMarbleContainer">
 						</table>
 					</div>
 					<div class="noMarblesMsg hint">you have no workflow in progress</div>
@@ -254,7 +292,7 @@ function build_company_panel(company) {
 	console.log('[ui] building company panel ' + company);
 
 	var mycss = '';
-	if (company === escapeHtml(bag.marble_company)) mycss = 'myCompany';
+	if (company === escapeHtml(Cookies.get('username'))) mycss = 'myCompany';
 
 	var html = `<div class="companyPanel" company="` + company + `">
 					<div class="companyNameWrap ` + mycss + `">
@@ -266,7 +304,7 @@ function build_company_panel(company) {
 		html += '<span class="fa fa-long-arrow-left floatRight"></span>';
 	}
 	html += `	</div>
-				<div class="ownerWrap"></div>
+				<div class="ownerWrap ` + mycss + `"></div>
 			</div>`;
 	$('#allUserPanelsWrap').append(html);
 }

@@ -14,7 +14,7 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 	// --------------------------------------------------------
 	// Handle WS Setup Messages
 	// --------------------------------------------------------
-	startup_lib.setup_ws_steps = function (data) {
+	startup_lib.setup_ws_steps = function (data,args) {
 
 		// --- [6] Enroll the admin (repeat if needed)  --- //
 		if (data.configure === 'enrollment') {
@@ -23,9 +23,9 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 			startup_lib.enroll_admin(1, function (e) {
 				if (e == null) {
 					startup_lib.setup_marbles_lib('localhost', cp.getMarblesPort(), function () {
-						startup_lib.detect_prev_startup({ startup: false }, function (err) {
+						startup_lib.detect_prev_startup({ startup: false,username: args.username }, function (err) {
 							if (err) {
-								startup_lib.create_assets(cp.getMarbleUsernames()); 	//builds marbles, then starts webapp
+								startup_lib.create_assets(cp.getMarbleUsernames(),args); 	//builds marbles, then starts webapp
 							}
 						});
 					});
@@ -39,9 +39,9 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 			startup_lib.enroll_admin(1, function (e) {									//re-enroll b/c we may be using new peer/order urls
 				if (e == null) {
 					startup_lib.setup_marbles_lib('localhost', cp.getMarblesPort(), function () {
-						startup_lib.detect_prev_startup({ startup: true }, function (err) {
+						startup_lib.detect_prev_startup({ startup: true,username: args.username }, function (err) {
 							if (err) {
-								startup_lib.create_assets(cp.getMarbleUsernames()); 	//builds marbles, then starts webapp
+								startup_lib.create_assets(cp.getMarbleUsernames(),args); 	//builds marbles, then starts webapp
 							}
 						});
 					});
@@ -51,7 +51,7 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 
 		// --- [8] Register marble owners --- /
 		else if (data.configure === 'register') {
-			startup_lib.create_assets(data.build_marble_owners);
+			startup_lib.create_assets(data.build_marble_owners,args);
 		}
 	};
 
@@ -213,7 +213,7 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 
 	var created = 0;
 	// Create marbles and marble owners, owners first
-	startup_lib.create_assets = function (build_marbles_users) {
+	startup_lib.create_assets = function (build_marbles_users,args) {
 		if (created!=0){
 			return;
 		}
@@ -253,7 +253,7 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 						}, function (err) {												//marble owner creation finished
 							logger.debug('- finished creating asset');
 							if (err == null) {
-								startup_lib.all_done();												//delay for peer catch up
+								startup_lib.all_done(args);												//delay for peer catch up
 							}
 						});
 					}, cp.getBlockDelay());
@@ -262,7 +262,7 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 		}
 		else {
 			logger.debug('- there are no new marble owners to create');
-			startup_lib.all_done();
+			startup_lib.all_done(args);
 		}
 	};
 
@@ -332,11 +332,11 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 	};
 
 	// We are done, inform the clients
-	startup_lib.all_done = function () {
+	startup_lib.all_done = function (args) {
 		console.log('\n------------------------------------------ All Done ------------------------------------------\n');
 		ws_server.record_state('register_owners', 'success');
 		ws_server.broadcast_state();
-		ws_server.check_for_updates(null);									//call the periodic task to get the state of everything
+		ws_server.check_for_updates(null,args);									//call the periodic task to get the state of everything
 	};
 
 	return startup_lib;

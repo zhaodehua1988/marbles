@@ -145,6 +145,29 @@ module.exports = function (enrollObj, g_options, fcw, logger) {
 		};
 		fcw.invoke_chaincode(enrollObj, opts, cb);
 	};
+	marbles_chaincode.update_marble = function (options, cb) {
+		console.log('');
+		logger.info('Setting marble owner...');
+
+		var opts = {
+			peer_urls: g_options.peer_urls,
+			peer_tls_opts: g_options.peer_tls_opts,
+			channel_id: g_options.channel_id,
+			chaincode_id: g_options.chaincode_id,
+			chaincode_version: g_options.chaincode_version,
+			event_urls: g_options.event_urls,
+			endorsed_hook: options.endorsed_hook,
+			ordered_hook: options.ordered_hook,
+			cc_function: 'review_marble',
+			cc_args: [
+				options.args.id,
+				options.args.userid,
+				options.args.action,
+				options.args.comment
+			],
+		};
+		fcw.invoke_chaincode(enrollObj, opts, cb);
+	};
 
 	//delete marble
 	marbles_chaincode.delete_marble = function (options, cb) {
@@ -311,9 +334,11 @@ module.exports = function (enrollObj, g_options, fcw, logger) {
 
 	//build full name
 	marbles_chaincode.read_everything = function (options, cb) {
-		console.log('');
 		logger.info('Fetching EVERYTHING...');
-
+		var args = [];
+		if (options && options.username){
+			args.push(options.username);
+		}
 		var opts = {
 			peer_urls: g_options.peer_urls,
 			peer_tls_opts: g_options.peer_tls_opts,
@@ -321,7 +346,7 @@ module.exports = function (enrollObj, g_options, fcw, logger) {
 			chaincode_version: g_options.chaincode_version,
 			chaincode_id: g_options.chaincode_id,
 			cc_function: 'read_everything',
-			cc_args: ['']
+			cc_args: args
 		};
 		fcw.query_chaincode(enrollObj, opts, cb);
 	};

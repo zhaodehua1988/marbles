@@ -168,7 +168,7 @@ if (config_error) {
 			startup_lib.setup_marbles_lib(host, port, function () {
 
 				// --- [3] Check If We have Started Marbles Before --- //
-				startup_lib.detect_prev_startup({ startup: true }, function (err) {
+				startup_lib.detect_prev_startup({ startup: true,username:'' }, function (err) {
 					if (err) {
 						startup_lib.startup_unsuccessful(host, port);
 					} else {
@@ -210,7 +210,7 @@ function setupWebSocket() {
 			// --- [5] Process the ws message  --- //
 			if (data && data.type == 'setup') {						// its a setup request, enter the setup code
 				logger.debug('[ws] setup message', data);
-				startup_lib.setup_ws_steps(data);					// <-- open startup_lib.js to view the rest of the start up code
+				startup_lib.setup_ws_steps(data,{username:data.username});					// <-- open startup_lib.js to view the rest of the start up code
 
 			} else if (data) {										// its a normal marble request, pass it to the lib for processing
 				ws_server.process_msg(ws, data);					// <-- the interesting "blockchainy" code is this way (websocket_server_side.js)
