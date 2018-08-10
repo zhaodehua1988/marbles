@@ -33,10 +33,79 @@ function build_marble(marble) {
 	// html += '<span id="' + marble.id + '" class="ball ' + size + ' ' + colorClass + ' ' + auditing + ' title="' + marble.id + '"';
 	// html += ' username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '"></span>';
 	html += '<tr id="' + marble.id + '" class="item" title="' + marble.id + '" username="' + marble.owner.username + '" company="' + marble.owner.company + '" owner_id="' + marble.owner.id + '">';
-	html += '<td>'+marble.id+'</td><td>'+size+'</td><td>'+colorClass+'</td><td>'+marble.owner.company+'</td><td>'+marble.owner.id+'</td></tr>';
+	html += '<td>'+marble.id+'</td><td>'+size+'</td><td>'+colorClass+'</td><td>'+marble.owner.company+'</td><td>'+marble.owner.id+'</td><td class="updateMarbleButton" onclick="OpenUpdatePanel(this)">deal</td></tr>';
 
 	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.innerMarbleContainer').prepend(html);
 	$('.marblesWrap[owner_id="' + marble.owner.id + '"]').find('.noMarblesMsg').hide();
+	return html;
+}
+function OpenUpdatePanel(obj) {
+	$('#tint').fadeIn();
+	$('#updatePanel').fadeIn();
+	// var company = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('company');
+	// var username = $(this).parents('.innerMarbleWrap').parents('.marblesWrap').attr('username');
+	// var owner_id = $(this).parents('.item').attr('owner_id');
+	// var company = $(this).parents('.item').attr('company');
+	var id = $(obj).parents('.item').attr('id');
+	// $('select[name="user"]').html('<option value="' + username + '">' + toTitleCase(username) + '</option>');
+	// $('input[name="company"]').val(company);
+	//  $('input[name="owner_id"]').val(owner_id);
+	var html = build_a_marble(window.AllMarbles[id]);
+	$('#updateInnerWrap').html(html);
+	return false;
+}
+
+//translate history check status
+// function translateHistory(checkStatus){
+// 	var ret = [];
+// 	for (i)
+// }
+//build a tx history div
+function build_a_marble(data) {
+	var html = '';
+	var username = '-';
+	var company = '-';
+	var id = '-';
+	if (data  && data.user){
+		data.owner=data.user;
+	}
+	if (data && data.owner && data.owner.username) {
+		username = data.owner.username;
+		company = data.owner.company;
+		id = data.owner.id;
+	}
+	var history = data.check;
+	html += `<div class="">
+				<div class="leftHalf">
+				<h5>Operation logs:</h5>
+				<ul style="display:block;width:90%;">
+			`;
+	for (var i=0;i<data.check.length;i++){
+		if (history[i] && history[i].date){
+			html+=(
+				//userid,name,date,review,comment
+				'<li style="margin-top:10px">'+history[i].name+' '+translateAction(i,history[i].review)+' on '+ formatDate(history[i].date,'Y-M-d')+
+				' with comment: '+history[i].comment+ '</li>'
+			);
+		}
+	}
+	html +=	`	</ul>
+			    </div>
+				<div class="rightHalf">
+					<p>
+						<div class="marbleLegend">Owner: </div>
+						<div class="marbleName">` + username + `</div>
+					</p>
+					<p>
+						<div class="marbleLegend">Company: </div>
+						<div class="marbleName">` + company + `</div>
+					</p>
+					<p>
+						<div class="marbleLegend">Ower Id: </div>
+						<div class="marbleName">` + id + `</div>
+					</p>
+				</div>
+			</div>`;
 	return html;
 }
 
@@ -48,13 +117,14 @@ function populate_users_marbles(msg) {
 	$('.marblesWrap[owner_id="' + msg.owner_id + '"]').find('.innerMarbleWrap').html(
 	`
 			<table>
-				<th>
-					<td>id</td>
-					<td>title</td>
-					<td>balance</td>
-					<td>contact</td>
-					<td>create date</td>
-				</th>
+				<tr>
+					<th>id</th>
+					<th>title</th>
+					<th>balance</th>
+					<th>contact</th>
+					<th>create date</th>
+					<th>action</th>
+				</tr>
 			</table>
 			<table class="innerMarbleContainer">
 			</table>
@@ -116,13 +186,14 @@ function build_user_panels(data) {
 					</div>
 					<div class="innerMarbleWrap">
 						<table>
-							<th>
-								<td>id</td>
-								<td>title</td>
-								<td>balance</td>
-								<td>contact</td>
-								<td>create date</td>
-							</th>
+							<tr>
+								<th>id</th>
+								<th>title</th>
+								<th>balance</th>
+								<th>contact</th>
+								<th>create date</th>
+								<th>action</th>
+							</tr>
 						</table>
 						<table class="innerMarbleContainer">
 						</table>
@@ -226,6 +297,9 @@ function build_a_tx(data, pos) {
 	var username = '-';
 	var company = '-';
 	var id = '-';
+	if (data && data.value && data.value.user){
+		data.value.owner=data.value.user;
+	}
 	if (data && data.value && data.value.owner && data.value.owner.username) {
 		username = data.value.owner.username;
 		company = data.value.owner.company;
@@ -253,3 +327,4 @@ function build_a_tx(data, pos) {
 			</div>`;
 	return html;
 }
+

@@ -55,6 +55,7 @@ $(document).on('ready', function () {
 		return false;
 	});
 
+
 	//fix marble owner panel (don't filter/hide it)
 	$(document).on('click', '.marblesFix', function () {
 		if ($(this).parent().parent().hasClass('marblesFixed')) {
@@ -209,6 +210,9 @@ $(document).on('ready', function () {
 	//close create panel
 	$('#closeCreate').click(function () {
 		$('#createPanel, #tint').fadeOut();
+	});	
+	$('#closeUpdate').click(function () {
+		$('#updatePanel, #tint').fadeOut();
 	});
 
 	//change size of marble
@@ -231,7 +235,7 @@ $(document).on('ready', function () {
 
 	function auditMarble(that, open) {
 		var marble_id = $(that).attr('id');
-		$('.auditingMarble').removeClass('auditingMarble');
+		// $('.auditingMarble').removeClass('auditingMarble');
 
 		if (!auditingMarble || marbles[marble_id].id != auditingMarble.id) {//different marble than before!
 			for (var x in pendingTxDrawing) clearTimeout(pendingTxDrawing[x]);
@@ -245,9 +249,9 @@ $(document).on('ready', function () {
 			$(that).addClass('auditingMarble');
 			$('#auditContentWrap').fadeIn();
 			$('#marbleId').html(marble_id);
-			var color = marbles[marble_id].color;
-			for (var i in bgcolors) $('.auditMarble').removeClass(bgcolors[i]);	//reset
-			$('.auditMarble').addClass(color.toLowerCase() + 'bg');
+			// var color = marbles[marble_id].color;
+			// for (var i in bgcolors) $('.auditMarble').removeClass(bgcolors[i]);	//reset
+			// $('.auditMarble').addClass(color.toLowerCase() + 'bg');
 
 			$('#rightEverything').addClass('rightEverythingOpened');
 			$('#leftEverything').fadeIn();

@@ -198,7 +198,7 @@ module.exports = function (logger, cp, fcw, marbles_lib, ws_server) {
 	};
 
 	startup_lib.register_user = function (admin,cb) {
-		for(let i = 1; i < 4; i++){
+		for(let i = 1; i < cp.getAllEnrollObj().length; i++){
 			let opt = cp.makeEnrollmentOptions(i);
 			fcw.register(opt,admin, {enrollmentID: opt.enroll_id, mspId: opt.msp_id, affiliation: 'org1',role: 'client'}, function (errCode, obj) {
 				if (errCode != null) {

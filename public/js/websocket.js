@@ -54,7 +54,7 @@ function connect_to_server() {
 			setTimeout(function () { connect(); }, 5000);					//try again one more time, server restarts are quick
 		}, 1000);
 	}
-
+	window.AllMarbles={};
 	function onMessage(msg) {
 		try {
 			var msgObj = JSON.parse(msg.data);
@@ -68,6 +68,12 @@ function connect_to_server() {
 				clear_trash();
 				build_user_panels(msgObj.everything.owners);
 				for (var i in msgObj.everything.marbles) {
+					var ms = msgObj.everything.marbles[i].marbles;
+					if (ms){
+						for (var j in ms){
+							window.AllMarbles[ms[j].id]=ms[j];
+						}
+					}
 					populate_users_marbles(msgObj.everything.marbles[i]);
 				}
 
@@ -82,6 +88,12 @@ function connect_to_server() {
 			//marbles
 			else if (msgObj.msg === 'users_marbles') {
 				console.log(wsTxt + ' rec', msgObj.msg, msgObj);
+				var msu = msgObj.marbles;
+					if (msu){
+						for (var j in ms){
+							window.AllMarbles[msu[j].id]=msu[j];
+						}
+					}
 				populate_users_marbles(msgObj);
 			}
 

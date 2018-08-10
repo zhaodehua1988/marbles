@@ -62,11 +62,7 @@
             },
             "registrar": [
                 {
-                    "enrollId": "admin",
-                    "enrollSecret": "adminpw"
-                },
-                {
-                    "enrollId": "ce",
+                    "enrollId": "core-enterprise",
                     "enrollSecret": "cepw"
                 },
                 {
@@ -74,8 +70,8 @@
                     "enrollSecret": "bankpw"
                 },
                 {
-                    "enrollId": "auditor",
-                    "enrollSecret": "auditor"
+                    "enrollId": "supplier",
+                    "enrollSecret": "supplier"
                 }
             ],
             "caName": null

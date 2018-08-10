@@ -137,7 +137,7 @@ function closeStartUp() {
 	$('#stepWelcomeWrap .loadingdiv').hide();
 	$('#startUpPanel').removeClass('bounceInLeft').addClass('slideOutLeft');
 	setTimeout(function () {
-		$('#createPanel, #startUpPanel, #tint').fadeOut();
+		$('#createPanel, #startUpPanel, #tint, #updatePanel').fadeOut();
 	}, 300);
 	setTimeout(function () {
 		$('#startUpPanel').removeClass('slideOutLeft');

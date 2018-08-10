@@ -33,8 +33,9 @@ function formatDate(date, fmt) {
 	function pad(value) {
 		return (value.toString().length < 2) ? '0' + value : value;
 	}
-	return fmt.replace(/%([a-zA-Z])/g, function (_, fmtCode) {
+	return fmt.replace(/([a-zA-Z])/g, function (_, fmtCode) {
 		var tmp;
+		console.log(fmtCode);
 		switch (fmtCode) {
 		case 'Y':								//Year
 			return date.getUTCFullYear();
@@ -87,4 +88,37 @@ function escapeHtml(str) {
 		ret = div.innerHTML;
 	}
 	return ret;
+}
+
+// const (
+// 	New = iota     //0
+// 	SuppApply      //供应商申请  supplier apply  1
+// 	CompanyCheck   //核心企业审核  2
+// 	BankCheck      //银行审核     3
+// 	SuppRecv       //供应商收款   4
+// 	CompanyRePayMent //核心企业还款   5
+// 	SuppRepayment  //供应商还款       6
+// 	BankRecv       //银行确认收款     7
+// 	EndOf            //包括成功和失败两种情况 8
+//  )
+//  //确认阶段
+//  const(
+// 	Disable = iota //0
+// 	Wait
+// 	Success
+// 	Failure
+//  )
+function translateAction(where,operation){
+	var operations = [
+		['','wait','create'],
+		['','wait','initiate'],
+		['','wait','confirm','reject'],
+		['','wait','loan','reject'],
+		['','wait','receive','reject'],
+		['','wait','pay','reject'],
+		['','wait','pay','reject'],
+		['','wait','confirm','reject'],
+		['','wait','successed','failed']
+	];
+	return operations[where][operation];
 }

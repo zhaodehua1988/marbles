@@ -19,14 +19,14 @@ module.exports = function (logger, cp) {
 	// Root
 	// ============================================================================================================================
 	app.get('/', function (req, res) {
-		res.redirect('/home');
+		res.redirect('/login');
 	});
 
 	// ============================================================================================================================
 	// Login
 	// ============================================================================================================================
 	app.get('/login', function (req, res) {
-		res.render('login', { title: 'Marbles - Login', bag: build_bag(req), users: cp.getAllEnrollObj() });
+		res.render('login', { title: 'Marbles - Login', bag: build_bag(req), users: cp.getAllEnrollObj(), user: req.session.user||{} });
 	});
 
 	app.post('/login', function (req, res) {
@@ -56,7 +56,7 @@ module.exports = function (logger, cp) {
 		//if (!req.session.user || !req.session.user.username) {		// no session? send them to login
 		//	res.redirect('/login');
 		//} else {
-		res.render('marbles', { title: 'Marbles - Home', bag: build_bag(req) });
+		res.render('marbles', { title: 'Marbles - Home', bag: build_bag(req), user: req.session.user||{} });
 		//}
 	}
 
