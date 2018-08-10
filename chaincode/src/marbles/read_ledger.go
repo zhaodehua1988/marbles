@@ -91,33 +91,77 @@ func read(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 //	}]
 // }
 // ============================================================================================================================
-func read_everything(stub shim.ChaincodeStubInterface) pb.Response {
+func read_everything(stub shim.ChaincodeStubInterface,args []string) pb.Response {
 	type Everything struct {
 		Owners   []User   `json:"owners"`
 		Marbles  []Marble `json:"marbles"`
 	}
 	var everything Everything
-
-	// ---- Get All Marbles ---- //
-	resultsIterator, err := stub.GetStateByRange("m0", "m9999999999999999999")
-	if err != nil {
-		return shim.Error(err.Error())
+	if len(args) > 1 {
+		return shim.Error("Incorrect number of arguments. Expecting args num > 1")
 	}
-	defer resultsIterator.Close()
-	
-	for resultsIterator.HasNext() {
-		aKeyValue, err := resultsIterator.Next()
+
+	if len(args) == 1{
+		companyName := args[0]
+		user,err:=getUserByCompany(stub,companyName)
+		if err != nil {
+			fmt.Println("Failed to find user - " + companyName)
+			return shim.Error(err.Error())
+		}
+
+		if !user.Enabled{
+			fmt.Println("user is disable -"+companyName)
+			return shim.Error(err.Error())
+		}
+		//var needMarbles []Marble
+		marbles,err:= getAllMarbles(stub)
+		if err != nil{
+			fmt.Println("getAllMarblesByUserID err :",err.Error())
+			return shim.Error(err.Error())
+		}
+
+		marblesNum := len(marbles)
+		for i:=0;i<marblesNum;i++{
+			if marbles[i].User.Id == user.Id{
+				everything.Marbles = append(everything.Marbles, marbles[i])
+				continue
+			}
+
+			for j:=0;j<4;j++{
+				if marbles[i].Check[j].UserID == user.Id{
+					//needMarbles = append(needMarbles, marbles[i])
+					everything.Marbles = append(everything.Marbles, marbles[i])
+					continue
+				}
+			}
+		}
+
+
+	} else{
+		// ---- Get All Marbles ---- //
+
+		everything.Marbles,_= getAllMarbles(stub)
+	/*	resultsIterator, err := stub.GetStateByRange("m0", "m9999999999999999999")
 		if err != nil {
 			return shim.Error(err.Error())
 		}
-		queryKeyAsStr := aKeyValue.Key
-		queryValAsBytes := aKeyValue.Value
-		fmt.Println("on marble id - ", queryKeyAsStr)
-		var marble Marble
-		json.Unmarshal(queryValAsBytes, &marble)                  //un stringify it aka JSON.parse()
-		everything.Marbles = append(everything.Marbles, marble)   //add this marble to the list
+		defer resultsIterator.Close()
+
+		for resultsIterator.HasNext() {
+			aKeyValue, err := resultsIterator.Next()
+			if err != nil {
+				return shim.Error(err.Error())
+			}
+			queryKeyAsStr := aKeyValue.Key
+			queryValAsBytes := aKeyValue.Value
+			fmt.Println("on marble id - ", queryKeyAsStr)
+			var marble Marble
+			json.Unmarshal(queryValAsBytes, &marble)                  //un stringify it aka JSON.parse()
+			everything.Marbles = append(everything.Marbles, marble)   //add this marble to the list
+		}
+		fmt.Println("marble array - ", everything.Marbles)
+	*/
 	}
-	fmt.Println("marble array - ", everything.Marbles)
 
 	// ---- Get All Owners ---- //
 	ownersIterator, err := stub.GetStateByRange("o0", "o9999999999999999999")
