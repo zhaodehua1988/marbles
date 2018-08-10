@@ -123,15 +123,54 @@ func getAllMarbles(stub shim.ChaincodeStubInterface)(marbles []Marble,err error)
 	fmt.Println("marble array - ", marbles)
 	return marbles,nil
 }
+func getAllUsers(stub shim.ChaincodeStubInterface)(users []User,err error){
 
+	ownersIterator, err := stub.GetStateByRange("o0", "o9999999999999999999")
+	if err != nil {
+		return users,err
+	}
+	defer ownersIterator.Close()
+
+	for ownersIterator.HasNext() {
+		aKeyValue, err := ownersIterator.Next()
+		if err != nil {
+			return users,err
+		}
+		queryKeyAsStr := aKeyValue.Key
+		queryValAsBytes := aKeyValue.Value
+		fmt.Println("on owner id - ", queryKeyAsStr)
+		var owner User
+		json.Unmarshal(queryValAsBytes, &owner)                   //un stringify it aka JSON.parse()
+
+		if owner.Enabled {                                        //only return enabled owners
+			users = append(users, owner)  //add this marble to the list
+		}
+	}
+	return users,err
+
+}
+//查询company，如果存在返回true
+func getCompanyExist(stub shim.ChaincodeStubInterface,company string) bool{
+
+	users,_:=getAllUsers(stub)
+	if len(users) <= 0{
+		return false
+	}
+	for i:=0;i<len(users);i++{
+		if users[i].Company == company {
+			return true
+		}
+	}
+
+	return false
+}
 func getUserByCompany(stub shim.ChaincodeStubInterface,company string)(user User,err error){
 
-	//var marble []Marble
-
-	// ---- Get All Marbles ---- //
+	// ---- Get All Users ---- //
 	resultsIterator, err := stub.GetStateByRange("o0", "o9999999999999999999")
 	if err != nil {
-		fmt.Println("get All marbles error !")
+		fmt.Println("get All users error !")
+		return user,err
 
 	}
 	defer resultsIterator.Close()

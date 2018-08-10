@@ -152,13 +152,13 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	_, err = get_user(stub, user.Id)
 	if err == nil {
 		fmt.Println("This user already exists - " + user.Id)
-		return shim.Error("This user already exists - " + user.Id)
+		return shim.Error("This user already exist - " + user.Id)
 	}
-
-	//companyUser,err:= getUserByCompany(stub,user.Company)
-//	if companyUser.Company != ""{
-	//	return shim.Error("can not add new user of this company ,user is exist")
-//	}
+	//check if user company alread exists
+	if getCompanyExist(stub,user.Company) {
+		fmt.Println("This company is already exists ")
+		return shim.Error("The company has already included a user. ")
+	}
 	//store user
 	ownerAsBytes, _ := json.Marshal(user)      //convert to array of bytes
 	err = stub.PutState(user.Id, ownerAsBytes) //store user by its UserID

@@ -143,7 +143,7 @@ func read_everything(stub shim.ChaincodeStubInterface,args []string) pb.Response
 		everything.Marbles,_= getAllMarbles(stub)
 	}
 
-	// ---- Get All Owners ---- //
+	// ---- Get All Users ---- //
 	ownersIterator, err := stub.GetStateByRange("o0", "o9999999999999999999")
 	if err != nil {
 		return shim.Error(err.Error())
