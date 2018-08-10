@@ -123,3 +123,31 @@ func getAllMarbles(stub shim.ChaincodeStubInterface)(marbles []Marble,err error)
 	fmt.Println("marble array - ", marbles)
 	return marbles,nil
 }
+
+func getUserByCompany(stub shim.ChaincodeStubInterface,company string)(user User,err error){
+
+	//var marble []Marble
+
+	// ---- Get All Marbles ---- //
+	resultsIterator, err := stub.GetStateByRange("o0", "o9999999999999999999")
+	if err != nil {
+		fmt.Println("get All marbles error !")
+
+	}
+	defer resultsIterator.Close()
+
+	for resultsIterator.HasNext() {
+		aKeyValue, err := resultsIterator.Next()
+		if err != nil {
+			return user,err
+		}
+		queryKeyAsStr := aKeyValue.Key
+		queryValAsBytes := aKeyValue.Value
+		fmt.Println("on marble id - ", queryKeyAsStr)
+		json.Unmarshal(queryValAsBytes, &user) //un stringify it aka JSON.parse()
+		if user.Company == company{
+			break
+		}
+	}
+	return user,nil
+}
