@@ -53,7 +53,7 @@ func get_user(stub shim.ChaincodeStubInterface, id string) (User, error) {
 
 
 	var owner User
-	ownerAsBytes, err := stub.GetState(id)                     //getState retreives a key/value from the ledger
+	ownerAsBytes, err := stub.GetState(id) //getState retreives a key/value from the ledger
 	if err != nil {                                            //this seems to always succeed, even if key didn't exist
 		return owner, errors.New("Failed to get owner - " + id)
 	}
@@ -150,19 +150,25 @@ func getAllUsers(stub shim.ChaincodeStubInterface)(users []User,err error){
 
 }
 //查询company，如果存在返回true
-func getCompanyExist(stub shim.ChaincodeStubInterface,company string) bool{
+func getUserExist(stub shim.ChaincodeStubInterface ) (users []User,err error){
+/*
+	var comp string
+	nameAsBytes, err := stub.GetState(company) //getState retreives a key/value from the ledger
 
-	users,_:=getAllUsers(stub)
-	if len(users) <= 0{
+	if err != nil { //this seems to always succeed, even if key didn't exist
+		return  false
+	}
+	json.Unmarshal(nameAsBytes, &comp)
+	if comp == ""{
 		return false
 	}
-	for i:=0;i<len(users);i++{
-		if users[i].Company == company {
-			return true
-		}
+*/
+
+	users,err = getAllUsers(stub);if err !=nil{
+		return users,err
 	}
 
-	return false
+	return users,err
 }
 func getUserByCompany(stub shim.ChaincodeStubInterface,company string)(user User,err error){
 

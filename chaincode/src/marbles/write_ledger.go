@@ -30,6 +30,7 @@ import (
 	"time"
 )
 
+var firstStart int
 // ============================================================================================================================
 // write() - genric write variable into ledger
 // 
@@ -147,25 +148,54 @@ func init_owner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	user.Enabled = true
 
 	fmt.Println(user)
+	if firstStart != 1{
 
+	}else{
+		 users,_:=getUserExist(stub)
+		for i:=0;i<len(users);i++{
+			if users[i].Id == user.Id || users[i].Company == user.Company{
+				//return shim.Error("This user already exist - " + user.Company)
+				return shim.Success(nil)
+			}
+		}
+	}
+
+
+	//if getCompanyExist(stub,user.Company) {
+	//	fmt.Println("This company is already exists ")
+	//	return shim.Error("The company has already included a user. ")
+	//}
+
+	//getCompanyExist(stub,user.Company)
+	//check if user company alread exists
+
+	//if getCompanyExist(stub,user.Company) {
+	//	fmt.Println("This company is already exists ")
+	//	return shim.Error("The company has already included a user. ")
+	//}
 	//check if user already exists
+	/*
 	_, err = get_user(stub, user.Id)
 	if err == nil {
 		fmt.Println("This user already exists - " + user.Id)
 		return shim.Error("This user already exist - " + user.Id)
 	}
-	//check if user company alread exists
-	if getCompanyExist(stub,user.Company) {
-		fmt.Println("This company is already exists ")
-		return shim.Error("The company has already included a user. ")
-	}
+	*/
 	//store user
-	ownerAsBytes, _ := json.Marshal(user)      //convert to array of bytes
-	err = stub.PutState(user.Id, ownerAsBytes) //store user by its UserID
+	userAsBytes, _ := json.Marshal(user)      //convert to array of bytes
+	err = stub.PutState(user.Id, userAsBytes) //store user by its UserID
 	if err != nil {
 		fmt.Println("Could not store user")
 		return shim.Error(err.Error())
 	}
+
+	/*
+	nameAsBytes,_:=json.Marshal(user.Username)
+	err = stub.PutState(user.Company,nameAsBytes)
+	if err != nil {
+		fmt.Println("Could not store user")
+		return shim.Error(err.Error())
+	}*/
 
 	fmt.Println("- end init_owner marble")
 	return shim.Success(nil)
